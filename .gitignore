@@ -1,0 +1,15 @@
+# Visual Studio / MSBuild build artifacts
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.pdb
+
+# Local executable in root (build output)
+SourceTXCompanion.exe
+
+# Temporary scratch files
+scratch/

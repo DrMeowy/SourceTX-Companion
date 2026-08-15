@@ -1,0 +1,63 @@
+{
+  "version": "1.98",
+  "companion_version": "0.01",
+  "schema_version": 21,
+  "boards": [
+    {
+      "id": "esp32s3-4mb",
+      "name": "ESP32-S3 SuperMini (4MB Flash DIO/80M, 2MB PSRAM) [Official]",
+      "chip": "esp32s3",
+      "flash_size": "4MB",
+      "flash_mode": "dio",
+      "flash_freq": "80m",
+      "psram": "2MB Quad-PSRAM",
+      "partition_nvs": "0x3D0000",
+      "enabled": true
+    },
+    {
+      "id": "esp32s3-8mb",
+      "name": "ESP32-S3 DevKitC (8MB Flash - In Development)",
+      "chip": "esp32s3",
+      "flash_size": "8MB",
+      "flash_mode": "qio",
+      "flash_freq": "80m",
+      "psram": "8MB Octal-PSRAM",
+      "partition_nvs": "0x7C0000",
+      "enabled": false
+    },
+    {
+      "id": "esp32s3-16mb",
+      "name": "ESP32-S3 N16R8 (16MB Flash - In Development)",
+      "chip": "esp32s3",
+      "flash_size": "16MB",
+      "flash_mode": "qio",
+      "flash_freq": "80m",
+      "psram": "8MB Octal-PSRAM",
+      "partition_nvs": "0xFC0000",
+      "enabled": false
+    },
+    {
+      "id": "sourcetx-custom-pcb",
+      "name": "SourceTX Custom PCB v1.0 (In Development)",
+      "chip": "esp32s3",
+      "flash_size": "16MB",
+      "flash_mode": "qio",
+      "flash_freq": "80m",
+      "psram": "8MB Octal-PSRAM",
+      "partition_nvs": "0xFC0000",
+      "enabled": false
+    }
+  ],
+  "displays": [
+    {
+      "id": "st7796",
+      "name": "3.5\" ST7796U 480x320 SPI (Touch FT6x36) [Official Reference]",
+      "resolution": "480x320",
+      "driver": "ST7796U",
+      "interface": "SPI",
+      "touch": "FT6x36 (I2C @ 0x38)",
+      "pins": "MOSI: 7, SCLK: 2, CS: 14, DC: 13, RST: 10, BL: 3 | Touch SDA: 8, SCL: 9",
+      "enabled": true
+    }
+  ]
+}
