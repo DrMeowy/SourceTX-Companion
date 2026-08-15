@@ -1,6 +1,6 @@
 {
   "version": "1.98",
-  "companion_version": "0.01",
+  "companion_version": "0.1.0",
   "schema_version": 21,
   "boards": [
     {
@@ -12,6 +12,10 @@
       "flash_freq": "80m",
       "psram": "2MB Quad-PSRAM",
       "partition_nvs": "0x3D0000",
+      "hardware_id": "sourcetx-s3-st7796-ft6x36",
+      "factory_manifest_url": "https://github.com/DrMeowy/SourceTX-Updates/releases/latest/download/factory.json",
+      "factory_manifest_signature_url": "https://github.com/DrMeowy/SourceTX-Updates/releases/latest/download/factory.json.sig",
+      "offline_factory_sha256": "379932294473c9b355845dda07efaf53ee4e8deec407dc29fcbb56ccaac9a521",
       "enabled": true
     },
     {

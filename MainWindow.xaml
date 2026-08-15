@@ -53,7 +53,7 @@
                     <TextBlock Text="SourceTX" FontWeight="Bold" FontSize="13.5" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" />
                     <TextBlock Text=" Companion" FontWeight="Normal" FontSize="13.5" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" />
                     <Border Background="{DynamicResource CardInnerBgBrush}" CornerRadius="4" Padding="6,2" Margin="10,0,0,0" VerticalAlignment="Center">
-                        <TextBlock Text="v0.01" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" />
+                        <TextBlock Text="v0.1.0" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" />
                     </Border>
                 </StackPanel>
 
@@ -160,7 +160,7 @@
                                 </StackPanel>
 
                                 <TextBlock Grid.Row="2" 
-                                           Text="Clean factory build: select ESP32 &amp; display, chip preflight, erase flash, write bootloader, and verified factory image." 
+                                           Text="One-click provisioning: download a signed factory release, verify hardware, erase if selected, and flash the complete image."
                                            FontSize="11" 
                                            Foreground="{DynamicResource TextSecondaryBrush}" 
                                            TextWrapping="Wrap" 
@@ -577,9 +577,9 @@
                             </Grid.ColumnDefinitions>
 
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="Verified Factory Package" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+                                <TextBlock Text="Signed Factory Package (online with verified offline fallback)" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
                                 <TextBox x:Name="InstallPackagePathBox" 
-                                         Text="SourceTX_ESP32S3_SuperMini_Factory.bin (Bootloader, Partitions &amp; App @ 0x0000)" 
+                                         Text="SourceTX-Updates / factory.json (complete image @ 0x0000)"
                                          Height="32" 
                                          VerticalContentAlignment="Center" 
                                          IsReadOnly="True"/>
@@ -594,7 +594,7 @@
                         <!-- Progress Bar & Status -->
                         <StackPanel Grid.Row="3" Margin="0,0,0,6">
                             <Grid Margin="0,0,0,2">
-                                <TextBlock x:Name="InstallStatusText" Text="Ready to run verified factory installation via esptool" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" />
+                                <TextBlock x:Name="InstallStatusText" Text="Ready to download, verify, and install the signed factory release" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" />
                                 <TextBlock x:Name="InstallPercentText" Text="0%" FontSize="10.5" FontWeight="SemiBold" Foreground="#C084FC" HorizontalAlignment="Right" />
                             </Grid>
                             <ProgressBar x:Name="InstallProgressBar" Value="0" Maximum="100" Height="5" Foreground="#C084FC" />
@@ -1458,7 +1458,7 @@
                 <!-- Status Pill Left -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                     <Ellipse x:Name="StatusIndicatorDot" Width="7.5" Height="7.5" Fill="{DynamicResource SuccessBrush}" Margin="0,0,8,0" />
-                    <TextBlock x:Name="StatusBarText" Text="Ready • SourceTX Companion v0.01" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" />
+                    <TextBlock x:Name="StatusBarText" Text="Ready • SourceTX Companion v0.1.0" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" />
                 </StackPanel>
 
                 <!-- Hardware Tag Center-Right -->

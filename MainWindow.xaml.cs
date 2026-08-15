@@ -5,6 +5,8 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Ports;
 using System.Linq;
+using System.Net;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -29,6 +31,10 @@ namespace SourceTXCompanion
         public string FlashFreq { get; set; }
         public string Psram { get; set; }
         public string PartitionNvs { get; set; }
+        public string HardwareId { get; set; }
+        public string FactoryManifestUrl { get; set; }
+        public string FactoryManifestSignatureUrl { get; set; }
+        public string OfflineFactorySha256 { get; set; }
         public bool Enabled { get; set; }
 
         public override string ToString() { return Name; }
@@ -87,6 +93,59 @@ namespace SourceTXCompanion
         public string ProjectName { get; set; }
         public string VersionString { get; set; }
         public long FileSizeBytes { get; set; }
+    }
+
+    public class FactoryReleaseManifest
+    {
+        public int Schema { get; set; }
+        public string Product { get; set; }
+        public string Hardware { get; set; }
+        public string Channel { get; set; }
+        public string Version { get; set; }
+        public string Chip { get; set; }
+        public string FlashSize { get; set; }
+        public string FlashMode { get; set; }
+        public string FlashFrequency { get; set; }
+        public string FlashOffset { get; set; }
+        public string MinimumCompanionVersion { get; set; }
+        public long Size { get; set; }
+        public string Sha256 { get; set; }
+        public string FactoryUrl { get; set; }
+        public string SignatureUrl { get; set; }
+        public string ReleaseUrl { get; set; }
+    }
+
+    public class FactoryImagePackage
+    {
+        public string ImagePath { get; set; }
+        public string TemporaryDirectory { get; set; }
+        public string SourceDescription { get; set; }
+        public FactoryReleaseManifest Manifest { get; set; }
+    }
+
+    public sealed class TimeoutWebClient : WebClient
+    {
+        public int TimeoutMilliseconds { get; set; }
+
+        public TimeoutWebClient()
+        {
+            TimeoutMilliseconds = 15000;
+            Headers[HttpRequestHeader.UserAgent] = "SourceTX-Companion/0.1.0";
+        }
+
+        protected override WebRequest GetWebRequest(Uri address)
+        {
+            WebRequest request = base.GetWebRequest(address);
+            request.Timeout = TimeoutMilliseconds;
+            var http = request as HttpWebRequest;
+            if (http != null)
+            {
+                http.ReadWriteTimeout = TimeoutMilliseconds;
+                http.AllowAutoRedirect = true;
+                http.MaximumAutomaticRedirections = 5;
+            }
+            return request;
+        }
     }
 
     public static class FirmwareValidator
@@ -212,6 +271,278 @@ namespace SourceTXCompanion
         }
     }
 
+    public static class FactoryReleaseSecurity
+    {
+        private const uint BCRYPT_ECDSA_PUBLIC_P256_MAGIC = 0x31534345;
+        public const string SourceTxUpdatePublicKeyPem =
+            "-----BEGIN PUBLIC KEY-----\n" +
+            "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEmeyz/UyEd597cKsYeiR6dl92YAAe\n" +
+            "mmH+O+ZY8Yz7NQKVRTYmS5DpJaNYdxnThRPEw2F2ie1yVvr7oXTaHJYrgw==\n" +
+            "-----END PUBLIC KEY-----\n";
+
+        [DllImport("bcrypt.dll", CharSet = CharSet.Unicode)]
+        private static extern int BCryptOpenAlgorithmProvider(
+            out IntPtr algorithm,
+            string algorithmId,
+            string implementation,
+            uint flags);
+
+        [DllImport("bcrypt.dll", CharSet = CharSet.Unicode)]
+        private static extern int BCryptImportKeyPair(
+            IntPtr algorithm,
+            IntPtr importKey,
+            string blobType,
+            out IntPtr key,
+            byte[] input,
+            int inputLength,
+            uint flags);
+
+        [DllImport("bcrypt.dll")]
+        private static extern int BCryptVerifySignature(
+            IntPtr key,
+            IntPtr paddingInfo,
+            byte[] hash,
+            int hashLength,
+            byte[] signature,
+            int signatureLength,
+            uint flags);
+
+        [DllImport("bcrypt.dll")]
+        private static extern int BCryptDestroyKey(IntPtr key);
+
+        [DllImport("bcrypt.dll")]
+        private static extern int BCryptCloseAlgorithmProvider(
+            IntPtr algorithm,
+            uint flags);
+
+        public static string Sha256Hex(byte[] data)
+        {
+            using (var sha = SHA256.Create())
+            {
+                return BitConverter.ToString(sha.ComputeHash(data))
+                    .Replace("-", "")
+                    .ToLowerInvariant();
+            }
+        }
+
+        public static string Sha256HexFile(string filePath)
+        {
+            using (var stream = File.OpenRead(filePath))
+            using (var sha = SHA256.Create())
+            {
+                return BitConverter.ToString(sha.ComputeHash(stream))
+                    .Replace("-", "")
+                    .ToLowerInvariant();
+            }
+        }
+
+        public static bool FixedTimeEqualsHex(string expected, string actual)
+        {
+            if (expected == null || actual == null || expected.Length != actual.Length)
+            {
+                return false;
+            }
+            int difference = 0;
+            for (int i = 0; i < expected.Length; i++)
+            {
+                difference |= char.ToLowerInvariant(expected[i]) ^ char.ToLowerInvariant(actual[i]);
+            }
+            return difference == 0;
+        }
+
+        public static bool VerifyEcdsaSha256(
+            byte[] content,
+            byte[] derSignature,
+            string publicKeyPemPath,
+            out string error)
+        {
+            if (!File.Exists(publicKeyPemPath))
+            {
+                error = "SourceTX public verification key is missing.";
+                return false;
+            }
+            return VerifyEcdsaSha256Pem(
+                content, derSignature, File.ReadAllText(publicKeyPemPath),
+                out error);
+        }
+
+        public static bool VerifyEcdsaSha256Pem(
+            byte[] content,
+            byte[] derSignature,
+            string publicKeyPem,
+            out string error)
+        {
+            error = null;
+            IntPtr algorithm = IntPtr.Zero;
+            IntPtr key = IntPtr.Zero;
+            try
+            {
+                byte[] publicPoint = ReadP256PublicPoint(publicKeyPem);
+                byte[] signature = DecodeDerEcdsaSignature(derSignature);
+                byte[] hash;
+                using (var sha = SHA256.Create())
+                {
+                    hash = sha.ComputeHash(content);
+                }
+
+                int status = BCryptOpenAlgorithmProvider(
+                    out algorithm, "ECDSA_P256", null, 0);
+                if (status != 0)
+                {
+                    error = string.Format("Windows CNG could not open ECDSA P-256 (0x{0:X8}).", status);
+                    return false;
+                }
+
+                byte[] blob = new byte[8 + publicPoint.Length];
+                Array.Copy(BitConverter.GetBytes(BCRYPT_ECDSA_PUBLIC_P256_MAGIC), 0, blob, 0, 4);
+                Array.Copy(BitConverter.GetBytes((uint)32), 0, blob, 4, 4);
+                Array.Copy(publicPoint, 0, blob, 8, publicPoint.Length);
+                status = BCryptImportKeyPair(
+                    algorithm, IntPtr.Zero, "ECCPUBLICBLOB",
+                    out key, blob, blob.Length, 0);
+                if (status != 0)
+                {
+                    error = string.Format("The SourceTX public key could not be imported (0x{0:X8}).", status);
+                    return false;
+                }
+
+                status = BCryptVerifySignature(
+                    key, IntPtr.Zero, hash, hash.Length,
+                    signature, signature.Length, 0);
+                if (status != 0)
+                {
+                    error = "ECDSA signature verification failed.";
+                    return false;
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                error = "Signature verification error: " + ex.Message;
+                return false;
+            }
+            finally
+            {
+                if (key != IntPtr.Zero) BCryptDestroyKey(key);
+                if (algorithm != IntPtr.Zero) BCryptCloseAlgorithmProvider(algorithm, 0);
+            }
+        }
+
+        private static byte[] ReadP256PublicPoint(string pem)
+        {
+            if (string.IsNullOrWhiteSpace(pem))
+                throw new InvalidDataException("SourceTX public verification key is missing.");
+            string base64 = pem
+                .Replace("-----BEGIN PUBLIC KEY-----", "")
+                .Replace("-----END PUBLIC KEY-----", "")
+                .Replace("\r", "")
+                .Replace("\n", "")
+                .Replace(" ", "")
+                .Trim();
+            byte[] der = Convert.FromBase64String(base64);
+            byte[] curveOid = { 0x06, 0x08, 0x2A, 0x86, 0x48, 0xCE, 0x3D, 0x03, 0x01, 0x07 };
+            if (IndexOf(der, curveOid) < 0)
+            {
+                throw new InvalidDataException("Verification key is not an NIST P-256 public key.");
+            }
+            byte[] bitStringPrefix = { 0x03, 0x42, 0x00, 0x04 };
+            int pointOffset = IndexOf(der, bitStringPrefix);
+            if (pointOffset < 0 || pointOffset + 68 > der.Length)
+            {
+                throw new InvalidDataException("Verification key has an invalid public point.");
+            }
+            byte[] point = new byte[64];
+            Array.Copy(der, pointOffset + 4, point, 0, point.Length);
+            return point;
+        }
+
+        private static int IndexOf(byte[] data, byte[] pattern)
+        {
+            for (int i = 0; i <= data.Length - pattern.Length; i++)
+            {
+                bool match = true;
+                for (int j = 0; j < pattern.Length; j++)
+                {
+                    if (data[i + j] != pattern[j])
+                    {
+                        match = false;
+                        break;
+                    }
+                }
+                if (match) return i;
+            }
+            return -1;
+        }
+
+        private static byte[] DecodeDerEcdsaSignature(byte[] der)
+        {
+            int offset = 0;
+            if (der == null || der.Length < 8 || der[offset++] != 0x30)
+            {
+                throw new InvalidDataException("Factory signature is not a DER ECDSA sequence.");
+            }
+            int sequenceLength = ReadDerLength(der, ref offset);
+            if (sequenceLength != der.Length - offset)
+            {
+                throw new InvalidDataException("Factory signature sequence length is invalid.");
+            }
+            byte[] r = ReadDerInteger(der, ref offset);
+            byte[] s = ReadDerInteger(der, ref offset);
+            if (offset != der.Length)
+            {
+                throw new InvalidDataException("Factory signature contains trailing data.");
+            }
+            byte[] raw = new byte[64];
+            Array.Copy(r, 0, raw, 32 - r.Length, r.Length);
+            Array.Copy(s, 0, raw, 64 - s.Length, s.Length);
+            return raw;
+        }
+
+        private static int ReadDerLength(byte[] der, ref int offset)
+        {
+            if (offset >= der.Length) throw new InvalidDataException("Truncated DER length.");
+            int first = der[offset++];
+            if ((first & 0x80) == 0) return first;
+            int count = first & 0x7F;
+            if (count < 1 || count > 2 || offset + count > der.Length)
+            {
+                throw new InvalidDataException("Unsupported DER length.");
+            }
+            int length = 0;
+            for (int i = 0; i < count; i++) length = (length << 8) | der[offset++];
+            return length;
+        }
+
+        private static byte[] ReadDerInteger(byte[] der, ref int offset)
+        {
+            if (offset >= der.Length || der[offset++] != 0x02)
+            {
+                throw new InvalidDataException("DER ECDSA component is not an integer.");
+            }
+            int length = ReadDerLength(der, ref offset);
+            if (length < 1 || offset + length > der.Length)
+            {
+                throw new InvalidDataException("Truncated DER ECDSA integer.");
+            }
+            int start = offset;
+            offset += length;
+            bool hadPositiveSignPadding = length > 1 && der[start] == 0;
+            while (length > 1 && der[start] == 0)
+            {
+                start++;
+                length--;
+            }
+            if (length > 32 ||
+                (!hadPositiveSignPadding && (der[start] & 0x80) != 0))
+            {
+                throw new InvalidDataException("DER ECDSA integer is outside P-256 range.");
+            }
+            byte[] value = new byte[length];
+            Array.Copy(der, start, value, 0, length);
+            return value;
+        }
+    }
+
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
@@ -221,6 +552,15 @@ namespace SourceTXCompanion
         private const uint TRANSFER_MAGIC = 0x5354584DU; // 'STXM' (0x5354584D)
         private const ushort TRANSFER_SCHEMA_VERSION = 21;
         private const string TRANSFER_PREFIX = "SOURCETX_MODEL:";
+        private const string OFFICIAL_BOARD_ID = "esp32s3-4mb";
+        private const string OFFICIAL_DISPLAY_ID = "st7796";
+        private const string OFFICIAL_HARDWARE_ID = "sourcetx-s3-st7796-ft6x36";
+        private const string OFFICIAL_FACTORY_MANIFEST_URL =
+            "https://github.com/DrMeowy/SourceTX-Updates/releases/latest/download/factory.json";
+        private const string OFFICIAL_FACTORY_MANIFEST_SIGNATURE_URL =
+            "https://github.com/DrMeowy/SourceTX-Updates/releases/latest/download/factory.json.sig";
+        private const string OFFICIAL_OFFLINE_FACTORY_SHA256 =
+            "379932294473c9b355845dda07efaf53ee4e8deec407dc29fcbb56ccaac9a521";
 
         private bool _isFlashing = false;
         private bool _isInstalling = false;
@@ -298,6 +638,10 @@ namespace SourceTXCompanion
                                     FlashFreq = b.ContainsKey("flash_freq") ? b["flash_freq"].ToString() : "80m",
                                     Psram = b.ContainsKey("psram") ? b["psram"].ToString() : "",
                                     PartitionNvs = b.ContainsKey("partition_nvs") ? b["partition_nvs"].ToString() : "0x3D0000",
+                                    HardwareId = b.ContainsKey("hardware_id") ? b["hardware_id"].ToString() : "",
+                                    FactoryManifestUrl = b.ContainsKey("factory_manifest_url") ? b["factory_manifest_url"].ToString() : "",
+                                    FactoryManifestSignatureUrl = b.ContainsKey("factory_manifest_signature_url") ? b["factory_manifest_signature_url"].ToString() : "",
+                                    OfflineFactorySha256 = b.ContainsKey("offline_factory_sha256") ? b["offline_factory_sha256"].ToString() : "",
                                     Enabled = b.ContainsKey("enabled") ? Convert.ToBoolean(b["enabled"]) : true
                                 });
                             }
@@ -332,12 +676,27 @@ namespace SourceTXCompanion
                 }
             }
 
+            // Security-sensitive installation values are compiled trust
+            // anchors. targets.json may describe UI profiles but cannot
+            // authorize a different feed, key, digest, chip or flash layout.
+            foreach (var board in _boards)
+            {
+                if (board.Id == OFFICIAL_BOARD_ID)
+                {
+                    ApplyOfficialFactoryTrust(board);
+                }
+                else
+                {
+                    board.Enabled = false;
+                }
+            }
+
             // Safe fallback if targets.json is missing or empty
             if (_boards.Count == 0)
             {
                 _boards.Add(new BoardProfile
                 {
-                    Id = "esp32s3-4mb",
+                    Id = OFFICIAL_BOARD_ID,
                     Name = "ESP32-S3 SuperMini (4MB Flash DIO/80M, 2MB PSRAM) [Official]",
                     Chip = "esp32s3",
                     FlashSize = "4MB",
@@ -345,6 +704,10 @@ namespace SourceTXCompanion
                     FlashFreq = "80m",
                     Psram = "2MB Quad-PSRAM",
                     PartitionNvs = "0x3D0000",
+                    HardwareId = OFFICIAL_HARDWARE_ID,
+                    FactoryManifestUrl = OFFICIAL_FACTORY_MANIFEST_URL,
+                    FactoryManifestSignatureUrl = OFFICIAL_FACTORY_MANIFEST_SIGNATURE_URL,
+                    OfflineFactorySha256 = OFFICIAL_OFFLINE_FACTORY_SHA256,
                     Enabled = true
                 });
             }
@@ -370,6 +733,39 @@ namespace SourceTXCompanion
             PopulateDropdown(UpdateDisplayComboBox, _displays);
 
             UpdateTargetInfoCard();
+        }
+
+        private static void ApplyOfficialFactoryTrust(BoardProfile board)
+        {
+            board.Chip = "esp32s3";
+            board.FlashSize = "4MB";
+            board.FlashMode = "dio";
+            board.FlashFreq = "80m";
+            board.PartitionNvs = "0x3D0000";
+            board.HardwareId = OFFICIAL_HARDWARE_ID;
+            board.FactoryManifestUrl = OFFICIAL_FACTORY_MANIFEST_URL;
+            board.FactoryManifestSignatureUrl = OFFICIAL_FACTORY_MANIFEST_SIGNATURE_URL;
+            board.OfflineFactorySha256 = OFFICIAL_OFFLINE_FACTORY_SHA256;
+        }
+
+        private static bool IsTrustedFactoryTarget(BoardProfile board)
+        {
+            return board != null && board.Enabled &&
+                board.Id == OFFICIAL_BOARD_ID &&
+                board.HardwareId == OFFICIAL_HARDWARE_ID &&
+                board.Chip == "esp32s3" && board.FlashSize == "4MB" &&
+                board.FlashMode == "dio" && board.FlashFreq == "80m" &&
+                board.FactoryManifestUrl == OFFICIAL_FACTORY_MANIFEST_URL &&
+                board.FactoryManifestSignatureUrl == OFFICIAL_FACTORY_MANIFEST_SIGNATURE_URL &&
+                board.OfflineFactorySha256 == OFFICIAL_OFFLINE_FACTORY_SHA256;
+        }
+
+        private static bool IsTrustedFactoryDisplay(DisplayProfile display)
+        {
+            return display != null && display.Enabled &&
+                display.Id == OFFICIAL_DISPLAY_ID &&
+                display.Driver == "ST7796U" &&
+                display.Resolution == "480x320";
         }
 
         private void PopulateDropdown<T>(ComboBox cb, List<T> items) where T : class
@@ -464,7 +860,7 @@ namespace SourceTXCompanion
 
             if (InstallTargetStatusBadge != null && InstallTargetStatusText != null)
             {
-                if (board.Enabled && display.Enabled)
+                if (IsTrustedFactoryTarget(board) && IsTrustedFactoryDisplay(display))
                 {
                     InstallTargetStatusBadge.Background = new SolidColorBrush(Color.FromRgb(0x1B, 0x33, 0x24));
                     InstallTargetStatusText.Text = "Target Verified";
@@ -524,7 +920,7 @@ namespace SourceTXCompanion
         {
             HideAllViews();
             HomeView.Visibility = Visibility.Visible;
-            StatusBarText.Text = "Ready • SourceTX Companion v0.01";
+            StatusBarText.Text = "Ready • SourceTX Companion v0.1.0";
         }
 
         private void NavToInstall_Click(object sender, RoutedEventArgs e)
@@ -822,6 +1218,252 @@ namespace SourceTXCompanion
             return localPath;
         }
 
+        private static string RequiredManifestString(
+            Dictionary<string, object> values, string key)
+        {
+            object raw;
+            if (!values.TryGetValue(key, out raw) || raw == null ||
+                string.IsNullOrWhiteSpace(raw.ToString()))
+            {
+                throw new InvalidDataException(
+                    string.Format("Factory manifest field '{0}' is missing.", key));
+            }
+            return raw.ToString();
+        }
+
+        private static long RequiredManifestLong(
+            Dictionary<string, object> values, string key)
+        {
+            object raw;
+            long result;
+            if (!values.TryGetValue(key, out raw) || raw == null ||
+                !long.TryParse(raw.ToString(), out result))
+            {
+                throw new InvalidDataException(
+                    string.Format("Factory manifest field '{0}' is invalid.", key));
+            }
+            return result;
+        }
+
+        private FactoryReleaseManifest ParseFactoryManifest(byte[] jsonBytes)
+        {
+            string json = new UTF8Encoding(false, true).GetString(jsonBytes);
+            var serializer = new JavaScriptSerializer();
+            var values = serializer.Deserialize<Dictionary<string, object>>(json);
+            if (values == null)
+            {
+                throw new InvalidDataException("Factory manifest JSON is empty.");
+            }
+            return new FactoryReleaseManifest
+            {
+                Schema = checked((int)RequiredManifestLong(values, "schema")),
+                Product = RequiredManifestString(values, "product"),
+                Hardware = RequiredManifestString(values, "hardware"),
+                Channel = RequiredManifestString(values, "channel"),
+                Version = RequiredManifestString(values, "version"),
+                Chip = RequiredManifestString(values, "chip"),
+                FlashSize = RequiredManifestString(values, "flash_size"),
+                FlashMode = RequiredManifestString(values, "flash_mode"),
+                FlashFrequency = RequiredManifestString(values, "flash_frequency"),
+                FlashOffset = RequiredManifestString(values, "flash_offset"),
+                MinimumCompanionVersion = RequiredManifestString(values, "minimum_companion_version"),
+                Size = RequiredManifestLong(values, "size"),
+                Sha256 = RequiredManifestString(values, "sha256"),
+                FactoryUrl = RequiredManifestString(values, "factory_url"),
+                SignatureUrl = RequiredManifestString(values, "signature_url"),
+                ReleaseUrl = RequiredManifestString(values, "release_url")
+            };
+        }
+
+        private void ValidateFactoryManifest(
+            FactoryReleaseManifest manifest, BoardProfile board)
+        {
+            if (manifest.Schema != 1 || manifest.Product != "SourceTX" ||
+                manifest.Channel != "stable")
+            {
+                throw new InvalidDataException("Factory manifest identity or schema is unsupported.");
+            }
+            if (!string.Equals(manifest.Hardware, board.HardwareId, StringComparison.Ordinal) ||
+                !string.Equals(manifest.Chip, board.Chip, StringComparison.OrdinalIgnoreCase) ||
+                !string.Equals(manifest.FlashSize, board.FlashSize, StringComparison.OrdinalIgnoreCase) ||
+                !string.Equals(manifest.FlashMode, board.FlashMode, StringComparison.OrdinalIgnoreCase) ||
+                !string.Equals(manifest.FlashFrequency, board.FlashFreq, StringComparison.OrdinalIgnoreCase) ||
+                manifest.FlashOffset != "0x0000")
+            {
+                throw new InvalidDataException(
+                    "Factory manifest does not match the selected hardware and flash contract.");
+            }
+            if (!Regex.IsMatch(manifest.Version, @"^[0-9]+\.[0-9]+(?:\.[0-9]+)?$") ||
+                !Regex.IsMatch(manifest.Sha256, @"^[0-9A-Fa-f]{64}$") ||
+                manifest.Size < 65536 || manifest.Size > 4L * 1024L * 1024L)
+            {
+                throw new InvalidDataException("Factory manifest version, size, or digest is invalid.");
+            }
+
+            Version requiredVersion;
+            Version companionVersion = new Version(UpdateChecker.CURRENT_VERSION);
+            if (!Version.TryParse(manifest.MinimumCompanionVersion, out requiredVersion) ||
+                requiredVersion > companionVersion)
+            {
+                throw new InvalidDataException(
+                    string.Format("Factory release requires Companion {0} or newer.", manifest.MinimumCompanionVersion));
+            }
+
+            string releasePrefix = string.Format(
+                "https://github.com/DrMeowy/SourceTX-Updates/releases/download/v{0}/",
+                manifest.Version);
+            if (!manifest.FactoryUrl.StartsWith(releasePrefix, StringComparison.Ordinal) ||
+                !manifest.SignatureUrl.StartsWith(releasePrefix, StringComparison.Ordinal) ||
+                !string.Equals(manifest.SignatureUrl, manifest.FactoryUrl + ".sig", StringComparison.Ordinal))
+            {
+                throw new InvalidDataException("Factory release asset URLs are outside the trusted SourceTX feed.");
+            }
+            Uri factoryUri;
+            Uri signatureUri;
+            if (!Uri.TryCreate(manifest.FactoryUrl, UriKind.Absolute, out factoryUri) ||
+                !Uri.TryCreate(manifest.SignatureUrl, UriKind.Absolute, out signatureUri) ||
+                factoryUri.Scheme != Uri.UriSchemeHttps || signatureUri.Scheme != Uri.UriSchemeHttps)
+            {
+                throw new InvalidDataException("Factory release assets must use HTTPS URLs.");
+            }
+        }
+
+        private async Task<FactoryImagePackage> AcquireFactoryPackageAsync(
+            BoardProfile board)
+        {
+            string temporaryDirectory = null;
+            try
+            {
+                if (string.IsNullOrWhiteSpace(board.FactoryManifestUrl) ||
+                    string.IsNullOrWhiteSpace(board.FactoryManifestSignatureUrl))
+                {
+                    throw new InvalidDataException("Online factory feed is not configured for this target.");
+                }
+                ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072;
+                AppendInstallLog("[DOWNLOAD] Fetching signed factory manifest from SourceTX-Updates...");
+                byte[] manifestBytes;
+                byte[] manifestSignature;
+                using (var client = new TimeoutWebClient())
+                {
+                    manifestBytes = await client.DownloadDataTaskAsync(
+                        new Uri(board.FactoryManifestUrl));
+                    if (manifestBytes.Length == 0 || manifestBytes.Length > 65536)
+                    {
+                        throw new InvalidDataException("Factory manifest has an invalid download size.");
+                    }
+                    manifestSignature = await client.DownloadDataTaskAsync(
+                        new Uri(board.FactoryManifestSignatureUrl));
+                }
+
+                string signatureError;
+                if (!FactoryReleaseSecurity.VerifyEcdsaSha256Pem(
+                    manifestBytes, manifestSignature,
+                    FactoryReleaseSecurity.SourceTxUpdatePublicKeyPem,
+                    out signatureError))
+                {
+                    throw new InvalidDataException(
+                        "Factory manifest signature rejected: " + signatureError);
+                }
+                FactoryReleaseManifest manifest = ParseFactoryManifest(manifestBytes);
+                ValidateFactoryManifest(manifest, board);
+                AppendInstallLog(string.Format(
+                    "[DOWNLOAD] Signed SourceTX v{0} factory manifest verified.",
+                    manifest.Version));
+
+                byte[] imageBytes;
+                byte[] imageSignature;
+                using (var client = new TimeoutWebClient())
+                {
+                    imageBytes = await client.DownloadDataTaskAsync(
+                        new Uri(manifest.FactoryUrl));
+                    imageSignature = await client.DownloadDataTaskAsync(
+                        new Uri(manifest.SignatureUrl));
+                }
+                if (imageBytes.LongLength != manifest.Size)
+                {
+                    throw new InvalidDataException(string.Format(
+                        "Factory image size mismatch: expected {0:N0}, received {1:N0} bytes.",
+                        manifest.Size, imageBytes.LongLength));
+                }
+                string digest = FactoryReleaseSecurity.Sha256Hex(imageBytes);
+                if (!FactoryReleaseSecurity.FixedTimeEqualsHex(manifest.Sha256, digest))
+                {
+                    throw new InvalidDataException("Factory image SHA-256 verification failed.");
+                }
+                if (!FactoryReleaseSecurity.VerifyEcdsaSha256Pem(
+                    imageBytes, imageSignature,
+                    FactoryReleaseSecurity.SourceTxUpdatePublicKeyPem,
+                    out signatureError))
+                {
+                    throw new InvalidDataException(
+                        "Factory image signature rejected: " + signatureError);
+                }
+
+                temporaryDirectory = Path.Combine(
+                    Path.GetTempPath(), "SourceTX-Companion",
+                    Guid.NewGuid().ToString("N"));
+                Directory.CreateDirectory(temporaryDirectory);
+                string imagePath = Path.Combine(
+                    temporaryDirectory, Path.GetFileName(new Uri(manifest.FactoryUrl).LocalPath));
+                File.WriteAllBytes(imagePath, imageBytes);
+                AppendInstallLog(string.Format(
+                    "[DOWNLOAD] Factory image verified: {0:N0} bytes, SHA-256 {1}",
+                    manifest.Size, digest));
+                return new FactoryImagePackage
+                {
+                    ImagePath = imagePath,
+                    TemporaryDirectory = temporaryDirectory,
+                    SourceDescription = "signed SourceTX-Updates release",
+                    Manifest = manifest
+                };
+            }
+            catch (Exception ex)
+            {
+                if (!string.IsNullOrEmpty(temporaryDirectory))
+                {
+                    try { Directory.Delete(temporaryDirectory, true); } catch { }
+                }
+                AppendInstallLog("[DOWNLOAD] Online factory acquisition unavailable: " + ex.Message);
+                AppendInstallLog("[OFFLINE] Checking bundled factory image against its pinned release digest...");
+            }
+
+            string offlinePath = FindBinaryPath("SourceTX_ESP32S3_SuperMini_Factory.bin");
+            if (!File.Exists(offlinePath)) offlinePath = FindBinaryPath("firmware.factory.bin");
+            if (!File.Exists(offlinePath) ||
+                string.IsNullOrWhiteSpace(board.OfflineFactorySha256))
+            {
+                AppendInstallLog("[ERROR] No verified offline factory image is available.");
+                return null;
+            }
+            string offlineDigest = FactoryReleaseSecurity.Sha256HexFile(offlinePath);
+            if (!FactoryReleaseSecurity.FixedTimeEqualsHex(
+                board.OfflineFactorySha256, offlineDigest))
+            {
+                AppendInstallLog("[ERROR] Bundled factory image does not match its pinned SHA-256 digest.");
+                return null;
+            }
+            AppendInstallLog(string.Format(
+                "[OFFLINE] Bundled factory image verified: SHA-256 {0}", offlineDigest));
+            return new FactoryImagePackage
+            {
+                ImagePath = offlinePath,
+                SourceDescription = "verified bundled offline image"
+            };
+        }
+
+        private void ReleaseFactoryPackage(FactoryImagePackage package)
+        {
+            if (package == null || string.IsNullOrEmpty(package.TemporaryDirectory)) return;
+            try
+            {
+                Directory.Delete(package.TemporaryDirectory, true);
+            }
+            catch (Exception ex)
+            {
+                AppendInstallLog("[WARN] Temporary factory download cleanup failed: " + ex.Message);
+            }
+        }
+
         #endregion
 
         #region Production Factory Flasher (Verified Preflight, Chip Erase & Image Validation)
@@ -831,10 +1473,11 @@ namespace SourceTXCompanion
             if (_isInstalling) return;
 
             var board = GetSelectedBoard();
-            if (!board.Enabled)
+            var display = GetSelectedDisplay();
+            if (!IsTrustedFactoryTarget(board) || !IsTrustedFactoryDisplay(display))
             {
                 MessageBox.Show(
-                    string.Format("The selected profile '{0}' is currently in development.\n\nPlease select the verified 'ESP32-S3 SuperMini (4MB Flash)' target.", board.Name),
+                    "The selected board/display combination is not an approved signed factory target.\n\nPlease select the verified ESP32-S3 SuperMini 4MB and ST7796U/FT6x36 reference target.",
                     "Profile In Development", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
@@ -853,15 +1496,34 @@ namespace SourceTXCompanion
                 return;
             }
 
-            string factoryBinary = FindBinaryPath("SourceTX_ESP32S3_SuperMini_Factory.bin");
-            if (!File.Exists(factoryBinary))
+            _isInstalling = true;
+            RunInstallButton.IsEnabled = false;
+            InstallProgressBar.Value = 0;
+            InstallPercentText.Text = "0%";
+            InstallStatusText.Text = "Downloading and verifying the signed SourceTX factory release...";
+
+            FactoryImagePackage factoryPackage = await AcquireFactoryPackageAsync(board);
+            if (factoryPackage == null)
             {
-                factoryBinary = FindBinaryPath("firmware.factory.bin");
-            }
-            if (!File.Exists(factoryBinary))
-            {
-                MessageBox.Show("SourceTX factory firmware image not found in firmware/ directory.", "Missing Firmware Binary", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(
+                    "A signed online factory release could not be downloaded, and the bundled offline image did not pass its pinned integrity check.",
+                    "Factory Image Unavailable", MessageBoxButton.OK, MessageBoxImage.Error);
+                _isInstalling = false;
+                RunInstallButton.IsEnabled = true;
                 return;
+            }
+            string factoryBinary = factoryPackage.ImagePath;
+            if (factoryPackage.Manifest != null)
+            {
+                InstallPackagePathBox.Text = string.Format(
+                    "SourceTX v{0} signed factory release ({1})",
+                    factoryPackage.Manifest.Version,
+                    Path.GetFileName(factoryBinary));
+            }
+            else
+            {
+                InstallPackagePathBox.Text = string.Format(
+                    "Offline fallback: {0}", Path.GetFileName(factoryBinary));
             }
 
             // Validate Factory Firmware Binary Structure and SHA-256
@@ -869,13 +1531,12 @@ namespace SourceTXCompanion
             if (!validation.IsValid)
             {
                 MessageBox.Show(string.Format("Factory firmware binary validation failed:\n\n{0}", validation.ErrorMessage), "Invalid Firmware Image", MessageBoxButton.OK, MessageBoxImage.Error);
+                ReleaseFactoryPackage(factoryPackage);
+                _isInstalling = false;
+                RunInstallButton.IsEnabled = true;
                 return;
             }
 
-            _isInstalling = true;
-            RunInstallButton.IsEnabled = false;
-            InstallProgressBar.Value = 0;
-            InstallPercentText.Text = "0%";
             InstallStatusText.Text = "Step 1/3: Running strict preflight chip & flash identification...";
 
             string baud = "115200";
@@ -892,6 +1553,7 @@ namespace SourceTXCompanion
             }
 
             AppendInstallLog("==================================================");
+            AppendInstallLog(string.Format("[SOURCE] Using {0}.", factoryPackage.SourceDescription));
             AppendInstallLog(string.Format("[PREFLIGHT] Validating image: {0} ({1:N0} bytes)", Path.GetFileName(factoryBinary), validation.FileSizeBytes));
             AppendInstallLog(string.Format("[PREFLIGHT] Image SHA-256: {0}", validation.Sha256Hash));
             AppendInstallLog(string.Format("[PREFLIGHT] Connecting to ESP32-S3 on {0}...", selectedPort));
@@ -905,7 +1567,8 @@ namespace SourceTXCompanion
             {
                 AppendInstallLog(line);
                 if (line.IndexOf("Chip is ESP32-S3", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                    line.IndexOf("Detecting chip type... ESP32-S3", StringComparison.OrdinalIgnoreCase) >= 0)
+                    line.IndexOf("Detecting chip type... ESP32-S3", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    line.IndexOf("Chip type: ESP32-S3", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
                     chipDetected = true;
                 }
@@ -920,24 +1583,31 @@ namespace SourceTXCompanion
             {
                 InstallStatusText.Text = "Preflight failed: Target is not an ESP32-S3 or ROM bootloader is unresponsive.";
                 AppendInstallLog("[ERROR] Preflight failed. Ensure board is in bootloader mode (hold BOOT while connecting USB).");
+                ReleaseFactoryPackage(factoryPackage);
                 _isInstalling = false;
                 RunInstallButton.IsEnabled = true;
                 return;
             }
 
             // Compare detected flash size with board target profile
-            if (!string.IsNullOrEmpty(detectedFlashSize))
+            if (string.IsNullOrEmpty(detectedFlashSize))
             {
-                if (!detectedFlashSize.StartsWith(board.FlashSize, StringComparison.OrdinalIgnoreCase) &&
-                    !board.FlashSize.StartsWith(detectedFlashSize, StringComparison.OrdinalIgnoreCase))
-                {
-                    InstallStatusText.Text = string.Format("Preflight aborted: Flash size mismatch (Expected {0}, found {1}).", board.FlashSize, detectedFlashSize);
-                    AppendInstallLog(string.Format("[ERROR] Hardware flash size mismatch! Target profile expects {0}, but connected chip reports {1}.", board.FlashSize, detectedFlashSize));
-                    AppendInstallLog("[ERROR] Flashing aborted to protect partition alignment.");
-                    _isInstalling = false;
-                    RunInstallButton.IsEnabled = true;
-                    return;
-                }
+                InstallStatusText.Text = "Preflight aborted: esptool did not report flash capacity.";
+                AppendInstallLog("[ERROR] Flash capacity was not reported; flashing fails closed.");
+                ReleaseFactoryPackage(factoryPackage);
+                _isInstalling = false;
+                RunInstallButton.IsEnabled = true;
+                return;
+            }
+            if (!string.Equals(detectedFlashSize, board.FlashSize, StringComparison.OrdinalIgnoreCase))
+            {
+                InstallStatusText.Text = string.Format("Preflight aborted: Flash size mismatch (Expected {0}, found {1}).", board.FlashSize, detectedFlashSize);
+                AppendInstallLog(string.Format("[ERROR] Hardware flash size mismatch! Target profile expects {0}, but connected chip reports {1}.", board.FlashSize, detectedFlashSize));
+                AppendInstallLog("[ERROR] Flashing aborted to protect partition alignment.");
+                ReleaseFactoryPackage(factoryPackage);
+                _isInstalling = false;
+                RunInstallButton.IsEnabled = true;
+                return;
             }
 
             AppendInstallLog(string.Format("[PREFLIGHT] PASS: Verified ESP32-S3 with {0} SPI Flash.", detectedFlashSize));
@@ -955,6 +1625,7 @@ namespace SourceTXCompanion
                 {
                     InstallStatusText.Text = "Flash erase failed.";
                     AppendInstallLog("[ERROR] Failed to erase SPI flash. Installation aborted.");
+                    ReleaseFactoryPackage(factoryPackage);
                     _isInstalling = false;
                     RunInstallButton.IsEnabled = true;
                     return;
@@ -995,6 +1666,7 @@ namespace SourceTXCompanion
                 AppendInstallLog("[ERROR] Write flash command failed. Check USB connection and baud rate.");
             }
 
+            ReleaseFactoryPackage(factoryPackage);
             _isInstalling = false;
             RunInstallButton.IsEnabled = true;
         }
@@ -1722,7 +2394,7 @@ namespace SourceTXCompanion
 
         public static class UpdateChecker
         {
-            public const string CURRENT_VERSION = "0.01";
+            public const string CURRENT_VERSION = "0.1.0";
             private const string GITHUB_RELEASES_API = "https://api.github.com/repos/DrMeowy/SourceTX-Companion/releases/latest";
             private const string GITHUB_TARGETS_URL = "https://raw.githubusercontent.com/DrMeowy/SourceTX-Companion/main/targets.json";
             private const string GITHUB_RELEASES_PAGE = "https://github.com/DrMeowy/SourceTX-Companion/releases";
@@ -1753,7 +2425,7 @@ namespace SourceTXCompanion
                         try
                         {
                             var req = (System.Net.HttpWebRequest)System.Net.WebRequest.Create(GITHUB_RELEASES_API);
-                            req.UserAgent = "SourceTXCompanion-UpdateChecker/0.01";
+                            req.UserAgent = "SourceTXCompanion-UpdateChecker/0.1.0";
                             req.Timeout = 5000;
                             req.Accept = "application/vnd.github.v3+json";
 
@@ -1781,7 +2453,7 @@ namespace SourceTXCompanion
                         if (string.IsNullOrEmpty(latestVer))
                         {
                             var req = (System.Net.HttpWebRequest)System.Net.WebRequest.Create(GITHUB_TARGETS_URL);
-                            req.UserAgent = "SourceTXCompanion-UpdateChecker/0.01";
+                            req.UserAgent = "SourceTXCompanion-UpdateChecker/0.1.0";
                             req.Timeout = 5000;
 
                             using (var resp = (System.Net.HttpWebResponse)req.GetResponse())
@@ -1915,7 +2587,7 @@ namespace SourceTXCompanion
             }
             finally
             {
-                StatusBarText.Text = "Ready • SourceTX Companion v0.01";
+                StatusBarText.Text = "Ready • SourceTX Companion v0.1.0";
                 if (btn != null) btn.IsEnabled = true;
             }
         }
