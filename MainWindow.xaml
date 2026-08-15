@@ -476,7 +476,7 @@
                     <TextBlock Text="Factory Build Installation &amp; Provisioning" 
                                FontSize="17" 
                                FontWeight="Bold" 
-                               Foreground="#FFFFFF" 
+                               Foreground="{DynamicResource TextPrimaryBrush}" 
                                HorizontalAlignment="Center" 
                                VerticalAlignment="Center" />
                 </Grid>
@@ -529,7 +529,7 @@
 
                             <Button Grid.Column="6" 
                                     Style="{StaticResource ModernAccentButton}" 
-                                    Background="#1A283C"
+                                    Background="{DynamicResource SecondaryBtnBgBrush}"
                                     BorderBrush="{DynamicResource AccentBrush}"
                                     BorderThickness="1"
                                     Height="32" 
@@ -552,7 +552,7 @@
                         </Grid>
 
                         <!-- Dynamic Board Specs & Pinout Info Card -->
-                        <Border Grid.Row="1" Background="#161F2E" BorderBrush="#253A59" BorderThickness="1" CornerRadius="6" Padding="10,5" Margin="0,0,0,8">
+                        <Border Grid.Row="1" Background="{DynamicResource NoticeBannerBgBrush}" BorderBrush="{DynamicResource NoticeBannerBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10,5" Margin="0,0,0,8">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -602,7 +602,7 @@
 
                         <!-- Console Output Log Box -->
                         <Border Grid.Row="4" 
-                                Background="#0A0C10" 
+                                Background="{DynamicResource ConsoleBgBrush}" 
                                 BorderBrush="{DynamicResource BorderBrush}" 
                                 BorderThickness="1" 
                                 CornerRadius="6" 
@@ -652,7 +652,7 @@
                     <TextBlock Text="Firmware Flasher &amp; 1-Click Compiler" 
                                FontSize="17" 
                                FontWeight="Bold" 
-                               Foreground="#FFFFFF" 
+                               Foreground="{DynamicResource TextPrimaryBrush}" 
                                HorizontalAlignment="Center" 
                                VerticalAlignment="Center" />
                 </Grid>
@@ -714,7 +714,7 @@
 
                             <Button Grid.Column="8" 
                                     Style="{StaticResource ModernAccentButton}" 
-                                    Background="#1A283C"
+                                    Background="{DynamicResource SecondaryBtnBgBrush}"
                                     BorderBrush="{DynamicResource AccentBrush}"
                                     BorderThickness="1"
                                     Height="32" 
@@ -764,7 +764,7 @@
 
                             <Button Grid.Column="4" 
                                     Style="{StaticResource ModernAccentButton}" 
-                                    Background="#1D2A3D"
+                                    Background="{DynamicResource SecondaryBtnBgBrush}"
                                     BorderBrush="{DynamicResource AccentBrush}"
                                     BorderThickness="1"
                                     Height="32" 
@@ -788,7 +788,7 @@
 
                         <!-- Console Output Log Box -->
                         <Border Grid.Row="3" 
-                                Background="#0A0C10" 
+                                Background="{DynamicResource ConsoleBgBrush}" 
                                 BorderBrush="{DynamicResource BorderBrush}" 
                                 BorderThickness="1" 
                                 CornerRadius="6" 
@@ -837,7 +837,7 @@
                     <TextBlock Text="Hardware Pin Mapping &amp; Surface Configurator" 
                                FontSize="17" 
                                FontWeight="Bold" 
-                               Foreground="#FFFFFF" 
+                               Foreground="{DynamicResource TextPrimaryBrush}" 
                                HorizontalAlignment="Center" 
                                VerticalAlignment="Center" />
                 </Grid>
@@ -858,7 +858,7 @@
                         </Grid.RowDefinitions>
 
                         <!-- Status Notice Banner -->
-                        <Border Grid.Row="0" Background="#1C1F2B" BorderBrush="#303A52" BorderThickness="1" CornerRadius="6" Padding="10,5" Margin="0,0,0,8">
+                        <Border Grid.Row="0" Background="{DynamicResource NoticeBannerBgBrush}" BorderBrush="{DynamicResource NoticeBannerBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10,5" Margin="0,0,0,8">
                             <Grid>
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="ℹ Configuration &amp; Builder: " FontSize="10.5" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}"/>
@@ -890,7 +890,7 @@
                         <ScrollViewer Grid.Row="2" x:Name="PanelPinMapTab" VerticalScrollBarVisibility="Auto" Margin="0,0,0,6">
                             <StackPanel>
                                 <Grid Margin="0,0,0,6">
-                                    <TextBlock Text="Visual Hardware Pinout &amp; GPIO Mapping" FontWeight="SemiBold" FontSize="12" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Visual Hardware Pinout &amp; GPIO Mapping" FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
                                     <Border HorizontalAlignment="Right" Background="#1B3324" CornerRadius="4" Padding="6,2">
                                         <TextBlock x:Name="PinValidationBadge" Text="✓ Valid Reference Pinout (ESP32-S3-FH4R2)" FontSize="9.5" FontWeight="Bold" Foreground="#10B981" />
                                     </Border>
@@ -948,7 +948,7 @@
                                 </Grid>
 
                                 <!-- Row 2: Display SPI Bus -->
-                                <TextBlock Text="ST7796U Display SPI Bus &amp; Backlight" FontWeight="SemiBold" FontSize="11" Foreground="#FFFFFF" Margin="0,2,0,4"/>
+                                <TextBlock Text="ST7796U Display SPI Bus &amp; Backlight" FontWeight="SemiBold" FontSize="11" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,2,0,4"/>
                                 <Grid Margin="0,0,0,8">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
@@ -990,7 +990,7 @@
                                 </Grid>
 
                                 <!-- Row 3: Touch & I2C Bus -->
-                                <TextBlock Text="FT6x36 Touch &amp; Sensor I2C Bus" FontWeight="SemiBold" FontSize="11" Foreground="#FFFFFF" Margin="0,2,0,4"/>
+                                <TextBlock Text="FT6x36 Touch &amp; Sensor I2C Bus" FontWeight="SemiBold" FontSize="11" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,2,0,4"/>
                                 <Grid Margin="0,0,0,8">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
@@ -1024,7 +1024,7 @@
                         <!-- Tab Content 1: Surface Channels -->
                         <ScrollViewer Grid.Row="2" x:Name="PanelChannelsTab" VerticalScrollBarVisibility="Auto" Visibility="Collapsed" Margin="0,0,0,6">
                             <StackPanel>
-                                <TextBlock Text="Primary Surface Control Channels (Reference Pinout)" FontWeight="SemiBold" FontSize="12" Foreground="#FFFFFF" Margin="0,0,0,6"/>
+                                <TextBlock Text="Primary Surface Control Channels (Reference Pinout)" FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,6"/>
                                 <Grid Margin="0,0,0,8">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
@@ -1077,7 +1077,7 @@
                         <!-- Tab Content 2: Surface Subsystems -->
                         <ScrollViewer Grid.Row="2" x:Name="PanelSubsystemsTab" VerticalScrollBarVisibility="Auto" Visibility="Collapsed" Margin="0,0,0,6">
                             <StackPanel>
-                                <TextBlock Text="Surface Tuning Subsystems" FontWeight="SemiBold" FontSize="12" Foreground="#FFFFFF" Margin="0,0,0,6"/>
+                                <TextBlock Text="Surface Tuning Subsystems" FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,6"/>
                                 <Grid Margin="0,0,0,8">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
@@ -1109,7 +1109,7 @@
                         <!-- Tab Content 3: CRSF & Telemetry -->
                         <ScrollViewer Grid.Row="2" x:Name="PanelCrsfTab" VerticalScrollBarVisibility="Auto" Visibility="Collapsed" Margin="0,0,0,6">
                             <StackPanel>
-                                <TextBlock Text="CRSF Radio Link &amp; Alarms (GPIO 42 Single-Wire)" FontWeight="SemiBold" FontSize="12" Foreground="#FFFFFF" Margin="0,0,0,6"/>
+                                <TextBlock Text="CRSF Radio Link &amp; Alarms (GPIO 42 Single-Wire)" FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,6"/>
                                 <Grid Margin="0,0,0,8">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
@@ -1140,7 +1140,7 @@
                         <!-- Tab Content 4: System Preferences -->
                         <ScrollViewer Grid.Row="2" x:Name="PanelHardwareTab" VerticalScrollBarVisibility="Auto" Visibility="Collapsed" Margin="0,0,0,6">
                             <StackPanel>
-                                <TextBlock Text="Transmitter System &amp; Display Preferences (ST7796U PWM)" FontWeight="SemiBold" FontSize="12" Foreground="#FFFFFF" Margin="0,0,0,6"/>
+                                <TextBlock Text="Transmitter System &amp; Display Preferences (ST7796U PWM)" FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,6"/>
                                 <Grid Margin="0,0,0,8">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
@@ -1171,7 +1171,7 @@
                             </Button>
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                                 <Button Style="{StaticResource ModernAccentButton}" 
-                                        Background="#1D2A3D"
+                                        Background="{DynamicResource SecondaryBtnBgBrush}"
                                         BorderBrush="{DynamicResource AccentBrush}"
                                         BorderThickness="1"
                                         Height="32" 
@@ -1207,7 +1207,7 @@
                     <TextBlock Text="Export Model Memory Backup (SOURCETX_MODEL)" 
                                FontSize="17" 
                                FontWeight="Bold" 
-                               Foreground="#FFFFFF" 
+                               Foreground="{DynamicResource TextPrimaryBrush}" 
                                HorizontalAlignment="Center" 
                                VerticalAlignment="Center" />
                 </Grid>
@@ -1265,7 +1265,7 @@
                         </Grid>
 
                         <!-- Schema Metadata Preview Tag -->
-                        <Border Grid.Row="1" Background="#141E2B" BorderBrush="#223B59" BorderThickness="1" CornerRadius="6" Padding="10,5" Margin="0,0,0,6">
+                        <Border Grid.Row="1" Background="{DynamicResource NoticeBannerBgBrush}" BorderBrush="{DynamicResource NoticeBannerBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10,5" Margin="0,0,0,6">
                             <Grid>
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="Transfer Magic: " FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}"/>
@@ -1281,7 +1281,7 @@
 
                         <!-- SOURCETX_MODEL Preview Box -->
                         <Border Grid.Row="2" 
-                                Background="#0A0C10" 
+                                Background="{DynamicResource ConsoleBgBrush}" 
                                 BorderBrush="{DynamicResource BorderBrush}" 
                                 BorderThickness="1" 
                                 CornerRadius="6" 
@@ -1330,7 +1330,7 @@
                     <TextBlock Text="Import Model Memory Restore (SOURCETX_MODEL)" 
                                FontSize="17" 
                                FontWeight="Bold" 
-                               Foreground="#FFFFFF" 
+                               Foreground="{DynamicResource TextPrimaryBrush}" 
                                HorizontalAlignment="Center" 
                                VerticalAlignment="Center" />
                 </Grid>
@@ -1391,7 +1391,7 @@
                                 </ComboBox>
                             </StackPanel>
 
-                            <Border Grid.Column="2" Background="#261E14" BorderBrush="#594324" BorderThickness="1" CornerRadius="6" Padding="10,4" VerticalAlignment="Bottom" Height="32">
+                            <Border Grid.Column="2" Background="{DynamicResource NoticeBannerBgBrush}" BorderBrush="{DynamicResource NoticeBannerBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10,4" VerticalAlignment="Bottom" Height="32">
                                 <Grid VerticalAlignment="Center">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="Validation: " FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
@@ -1403,7 +1403,7 @@
 
                         <!-- Validation Inspector Box -->
                         <Border Grid.Row="2" 
-                                Background="#0A0C10" 
+                                Background="{DynamicResource ConsoleBgBrush}" 
                                 BorderBrush="{DynamicResource BorderBrush}" 
                                 BorderThickness="1" 
                                 CornerRadius="6" 
