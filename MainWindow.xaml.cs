@@ -1706,21 +1706,224 @@ namespace SourceTXCompanion
 
         #endregion
 
-        #region Bug Report & Update Logic
+        #region Online Update Checker & Bug Report Logic
 
-        private void CheckForUpdates_Click(object sender, RoutedEventArgs e)
+        public class UpdateCheckResult
         {
-            MessageBox.Show(
-                "SourceTX Companion v0.01 is currently up to date!\n\nTarget Hardware: ESP32-S3 (4MB Flash DIO/80M, 2MB PSRAM)\nDisplay: 3.5\" ST7796U 480x320 SPI (Touch FT6x36)\nFirmware Version: v1.98 (Official Build)\n\nTo check for new releases and source updates, visit the SourceTX GitHub repository.", 
-                "SourceTX Updates", 
-                MessageBoxButton.OK, 
-                MessageBoxImage.Information);
+            public bool IsSuccess { get; set; }
+            public bool IsUpdateAvailable { get; set; }
+            public string LatestVersion { get; set; }
+            public string CurrentVersion { get; set; }
+            public string ReleaseTitle { get; set; }
+            public string ReleaseNotes { get; set; }
+            public string ReleaseUrl { get; set; }
+            public string ErrorMessage { get; set; }
+        }
+
+        public static class UpdateChecker
+        {
+            public const string CURRENT_VERSION = "0.01";
+            private const string GITHUB_RELEASES_API = "https://api.github.com/repos/DrMeowy/SourceTX-Companion/releases/latest";
+            private const string GITHUB_TARGETS_URL = "https://raw.githubusercontent.com/DrMeowy/SourceTX-Companion/main/targets.json";
+            private const string GITHUB_RELEASES_PAGE = "https://github.com/DrMeowy/SourceTX-Companion/releases";
+
+            public static async Task<UpdateCheckResult> CheckForUpdatesAsync()
+            {
+                var result = new UpdateCheckResult
+                {
+                    CurrentVersion = CURRENT_VERSION,
+                    ReleaseUrl = GITHUB_RELEASES_PAGE
+                };
+
+                return await Task.Run(() =>
+                {
+                    try
+                    {
+                        System.Net.ServicePointManager.SecurityProtocol = 
+                            System.Net.SecurityProtocolType.Tls12 | 
+                            System.Net.SecurityProtocolType.Tls11 | 
+                            System.Net.SecurityProtocolType.Tls;
+
+                        string latestVer = null;
+                        string releaseTitle = "SourceTX Companion Update";
+                        string releaseNotes = "";
+                        string releaseUrl = GITHUB_RELEASES_PAGE;
+
+                        // 1. Check GitHub Releases API
+                        try
+                        {
+                            var req = (System.Net.HttpWebRequest)System.Net.WebRequest.Create(GITHUB_RELEASES_API);
+                            req.UserAgent = "SourceTXCompanion-UpdateChecker/0.01";
+                            req.Timeout = 5000;
+                            req.Accept = "application/vnd.github.v3+json";
+
+                            using (var resp = (System.Net.HttpWebResponse)req.GetResponse())
+                            using (var reader = new StreamReader(resp.GetResponseStream()))
+                            {
+                                string json = reader.ReadToEnd();
+                                var serializer = new JavaScriptSerializer();
+                                var dict = serializer.Deserialize<Dictionary<string, object>>(json);
+                                if (dict != null)
+                                {
+                                    if (dict.ContainsKey("tag_name")) latestVer = dict["tag_name"].ToString().TrimStart('v', 'V');
+                                    if (dict.ContainsKey("name")) releaseTitle = dict["name"].ToString();
+                                    if (dict.ContainsKey("body")) releaseNotes = dict["body"].ToString();
+                                    if (dict.ContainsKey("html_url")) releaseUrl = dict["html_url"].ToString();
+                                }
+                            }
+                        }
+                        catch (Exception apiEx)
+                        {
+                            Debug.WriteLine("Releases API notice: " + apiEx.Message);
+                        }
+
+                        // 2. Fallback to main branch targets.json manifest
+                        if (string.IsNullOrEmpty(latestVer))
+                        {
+                            var req = (System.Net.HttpWebRequest)System.Net.WebRequest.Create(GITHUB_TARGETS_URL);
+                            req.UserAgent = "SourceTXCompanion-UpdateChecker/0.01";
+                            req.Timeout = 5000;
+
+                            using (var resp = (System.Net.HttpWebResponse)req.GetResponse())
+                            using (var reader = new StreamReader(resp.GetResponseStream()))
+                            {
+                                string json = reader.ReadToEnd();
+                                var serializer = new JavaScriptSerializer();
+                                var dict = serializer.Deserialize<Dictionary<string, object>>(json);
+                                if (dict != null && dict.ContainsKey("companion_version"))
+                                {
+                                    latestVer = dict["companion_version"].ToString();
+                                }
+                            }
+                        }
+
+                        if (!string.IsNullOrEmpty(latestVer))
+                        {
+                            result.IsSuccess = true;
+                            result.LatestVersion = latestVer;
+                            result.ReleaseTitle = releaseTitle;
+                            result.ReleaseNotes = releaseNotes;
+                            result.ReleaseUrl = releaseUrl;
+
+                            result.IsUpdateAvailable = CompareVersions(latestVer, CURRENT_VERSION) > 0;
+                            return result;
+                        }
+
+                        result.IsSuccess = false;
+                        result.ErrorMessage = "Unable to retrieve release metadata from GitHub repository.";
+                        return result;
+                    }
+                    catch (Exception ex)
+                    {
+                        result.IsSuccess = false;
+                        result.ErrorMessage = "Connection notice: " + ex.Message;
+                        return result;
+                    }
+                });
+            }
+
+            private static int CompareVersions(string verA, string verB)
+            {
+                try
+                {
+                    Version a, b;
+                    if (Version.TryParse(verA, out a) && Version.TryParse(verB, out b))
+                    {
+                        return a.CompareTo(b);
+                    }
+
+                    double fa, fb;
+                    if (double.TryParse(verA, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out fa) &&
+                        double.TryParse(verB, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out fb))
+                    {
+                        return fa.CompareTo(fb);
+                    }
+                }
+                catch { }
+                return string.Compare(verA, verB, StringComparison.OrdinalIgnoreCase);
+            }
+        }
+
+        private async void CheckForUpdates_Click(object sender, RoutedEventArgs e)
+        {
+            var btn = sender as Button;
+            if (btn != null) btn.IsEnabled = false;
+            StatusBarText.Text = "Checking for updates on GitHub (DrMeowy/SourceTX-Companion)...";
+
+            try
+            {
+                var result = await UpdateChecker.CheckForUpdatesAsync();
+
+                if (result.IsSuccess)
+                {
+                    if (result.IsUpdateAvailable)
+                    {
+                        string msg = string.Format(
+                            "A new version of SourceTX Companion is available!\n\n" +
+                            "• Current Version: v{0}\n" +
+                            "• Latest Version: v{1}\n" +
+                            "• Release: {2}\n\n" +
+                            "{3}\n\n" +
+                            "Would you like to open the GitHub Release page to download the latest version?",
+                            result.CurrentVersion, result.LatestVersion, result.ReleaseTitle,
+                            string.IsNullOrEmpty(result.ReleaseNotes) ? "" : "Notes:\n" + result.ReleaseNotes);
+
+                        var prompt = MessageBox.Show(msg, "New Update Available!", MessageBoxButton.YesNo, MessageBoxImage.Information);
+                        if (prompt == MessageBoxResult.Yes)
+                        {
+                            Process.Start(new ProcessStartInfo
+                            {
+                                FileName = result.ReleaseUrl,
+                                UseShellExecute = true
+                            });
+                        }
+                    }
+                    else
+                    {
+                        MessageBox.Show(
+                            string.Format(
+                                "You are running the latest version of SourceTX Companion!\n\n" +
+                                "• Companion Version: v{0} (Latest)\n" +
+                                "• Firmware Target: v1.98 Official Reference\n" +
+                                "• GitHub Repository: DrMeowy/SourceTX-Companion\n" +
+                                "• Release Channel: Stable",
+                                result.CurrentVersion),
+                            "SourceTX Companion - Up to Date",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Information);
+                    }
+                }
+                else
+                {
+                    var prompt = MessageBox.Show(
+                        string.Format(
+                            "Could not check for online updates.\n\n{0}\n\nWould you like to check the GitHub repository directly?",
+                            result.ErrorMessage),
+                        "Update Check",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Warning);
+
+                    if (prompt == MessageBoxResult.Yes)
+                    {
+                        Process.Start(new ProcessStartInfo
+                        {
+                            FileName = "https://github.com/DrMeowy/SourceTX-Companion/releases",
+                            UseShellExecute = true
+                        });
+                    }
+                }
+            }
+            finally
+            {
+                StatusBarText.Text = "Ready • SourceTX Companion v0.01";
+                if (btn != null) btn.IsEnabled = true;
+            }
         }
 
         private void ReportBug_Click(object sender, RoutedEventArgs e)
         {
             var result = MessageBox.Show(
-                "Would you like to open GitHub to report an issue or bug for SourceTX?\n\nURL: https://github.com/DrMeowy/SourceTX/issues", 
+                "Would you like to open GitHub to report an issue or bug for SourceTX?\n\nURL: https://github.com/DrMeowy/SourceTX-Companion/issues", 
                 "SourceTX - Report a Bug", 
                 MessageBoxButton.YesNo, 
                 MessageBoxImage.Question);
@@ -1731,13 +1934,13 @@ namespace SourceTXCompanion
                 {
                     Process.Start(new ProcessStartInfo
                     {
-                        FileName = "https://github.com/DrMeowy/SourceTX/issues/new",
+                        FileName = "https://github.com/DrMeowy/SourceTX-Companion/issues/new",
                         UseShellExecute = true
                     });
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(string.Format("Could not open default browser: {0}\n\nPlease visit: https://github.com/DrMeowy/SourceTX/issues", ex.Message), "Report Bug", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show(string.Format("Could not open default browser: {0}\n\nPlease visit: https://github.com/DrMeowy/SourceTX-Companion/issues", ex.Message), "Report Bug", MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
             }
         }
