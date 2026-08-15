@@ -1580,6 +1580,67 @@ namespace SourceTXCompanion
 
         #endregion
 
+        #region Theme Switcher (Dark & Light)
+
+        private bool _isDarkTheme = true;
+
+        private void ToggleTheme_Click(object sender, RoutedEventArgs e)
+        {
+            _isDarkTheme = !_isDarkTheme;
+            ApplyTheme(_isDarkTheme);
+        }
+
+        private void ApplyTheme(bool isDark)
+        {
+            if (isDark)
+            {
+                // Dark Theme (Default)
+                Application.Current.Resources["BgDarkBrush"] = new SolidColorBrush(Color.FromRgb(0x0D, 0x0F, 0x14));
+                Application.Current.Resources["SurfaceBrush"] = new SolidColorBrush(Color.FromRgb(0x15, 0x19, 0x22));
+                Application.Current.Resources["SurfaceElevatedBrush"] = new SolidColorBrush(Color.FromRgb(0x1C, 0x22, 0x30));
+                Application.Current.Resources["BorderBrush"] = new SolidColorBrush(Color.FromRgb(0x25, 0x2C, 0x3D));
+                Application.Current.Resources["BorderHoverBrush"] = new SolidColorBrush(Color.FromRgb(0x38, 0x44, 0x5E));
+                Application.Current.Resources["TextPrimaryBrush"] = new SolidColorBrush(Color.FromRgb(0xF9, 0xFA, 0xFB));
+                Application.Current.Resources["TextSecondaryBrush"] = new SolidColorBrush(Color.FromRgb(0x9C, 0xA3, 0xAF));
+                Application.Current.Resources["TextMutedBrush"] = new SolidColorBrush(Color.FromRgb(0x6B, 0x72, 0x80));
+                Application.Current.Resources["AccentBrush"] = new SolidColorBrush(Color.FromRgb(0x00, 0xD2, 0xFF));
+                Application.Current.Resources["AccentHoverBrush"] = new SolidColorBrush(Color.FromRgb(0x33, 0xE1, 0xFF));
+                Application.Current.Resources["TitleBarBrush"] = new SolidColorBrush(Color.FromRgb(0x10, 0x13, 0x1B));
+                Application.Current.Resources["FooterBrush"] = new SolidColorBrush(Color.FromRgb(0x0D, 0x10, 0x16));
+                Application.Current.Resources["ConsoleBgBrush"] = new SolidColorBrush(Color.FromRgb(0x0A, 0x0C, 0x10));
+                Application.Current.Resources["CardInnerBgBrush"] = new SolidColorBrush(Color.FromRgb(0x16, 0x1F, 0x2E));
+                Application.Current.Resources["CardInnerBorderBrush"] = new SolidColorBrush(Color.FromRgb(0x25, 0x3A, 0x59));
+
+                if (ThemeToggleText != null) ThemeToggleText.Text = "Theme: 🌙 Dark";
+            }
+            else
+            {
+                // Light Theme
+                Application.Current.Resources["BgDarkBrush"] = new SolidColorBrush(Color.FromRgb(0xF1, 0xF5, 0xF9));
+                Application.Current.Resources["SurfaceBrush"] = new SolidColorBrush(Color.FromRgb(0xFF, 0xFF, 0xFF));
+                Application.Current.Resources["SurfaceElevatedBrush"] = new SolidColorBrush(Color.FromRgb(0xF8, 0xFA, 0xFC));
+                Application.Current.Resources["BorderBrush"] = new SolidColorBrush(Color.FromRgb(0xCB, 0xD5, 0xE1));
+                Application.Current.Resources["BorderHoverBrush"] = new SolidColorBrush(Color.FromRgb(0x94, 0xA3, 0xB8));
+                Application.Current.Resources["TextPrimaryBrush"] = new SolidColorBrush(Color.FromRgb(0x0F, 0x17, 0x2A));
+                Application.Current.Resources["TextSecondaryBrush"] = new SolidColorBrush(Color.FromRgb(0x47, 0x55, 0x69));
+                Application.Current.Resources["TextMutedBrush"] = new SolidColorBrush(Color.FromRgb(0x64, 0x74, 0x8B));
+                Application.Current.Resources["AccentBrush"] = new SolidColorBrush(Color.FromRgb(0x02, 0x84, 0xC7));
+                Application.Current.Resources["AccentHoverBrush"] = new SolidColorBrush(Color.FromRgb(0x03, 0x69, 0xA1));
+                Application.Current.Resources["TitleBarBrush"] = new SolidColorBrush(Color.FromRgb(0xE2, 0xE8, 0xF0));
+                Application.Current.Resources["FooterBrush"] = new SolidColorBrush(Color.FromRgb(0xE2, 0xE8, 0xF0));
+                Application.Current.Resources["ConsoleBgBrush"] = new SolidColorBrush(Color.FromRgb(0x0F, 0x17, 0x2A));
+                Application.Current.Resources["CardInnerBgBrush"] = new SolidColorBrush(Color.FromRgb(0xEA, 0xEE, 0xF4));
+                Application.Current.Resources["CardInnerBorderBrush"] = new SolidColorBrush(Color.FromRgb(0xCB, 0xD5, 0xE1));
+
+                if (ThemeToggleText != null) ThemeToggleText.Text = "Theme: ☀️ Light";
+            }
+
+            this.Background = (Brush)Application.Current.Resources["BgDarkBrush"];
+            this.Foreground = (Brush)Application.Current.Resources["TextPrimaryBrush"];
+        }
+
+        #endregion
+
         #region Bug Report & Update Logic
 
         private void CheckForUpdates_Click(object sender, RoutedEventArgs e)

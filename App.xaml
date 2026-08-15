@@ -33,6 +33,11 @@
         <SolidColorBrush x:Key="TextMutedBrush" Color="{StaticResource TextMutedColor}" />
         <SolidColorBrush x:Key="SuccessBrush" Color="{StaticResource SuccessColor}" />
         <SolidColorBrush x:Key="WarningBrush" Color="{StaticResource WarningColor}" />
+        <SolidColorBrush x:Key="TitleBarBrush" Color="#10131B" />
+        <SolidColorBrush x:Key="FooterBrush" Color="#0D1016" />
+        <SolidColorBrush x:Key="ConsoleBgBrush" Color="#0A0C10" />
+        <SolidColorBrush x:Key="CardInnerBgBrush" Color="#161F2E" />
+        <SolidColorBrush x:Key="CardInnerBorderBrush" Color="#253A59" />
 
         <!-- Base Text Block Style -->
         <Style TargetType="TextBlock">

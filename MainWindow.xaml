@@ -7,8 +7,8 @@
         WindowStyle="None"
         ResizeMode="CanMinimize"
         AllowsTransparency="False"
-        Background="{StaticResource BgDarkBrush}"
-        Foreground="{StaticResource TextPrimaryBrush}">
+        Background="{DynamicResource BgDarkBrush}"
+        Foreground="{DynamicResource TextPrimaryBrush}">
     
     <WindowChrome.WindowChrome>
         <WindowChrome CaptionHeight="42" 
@@ -28,8 +28,8 @@
         <!-- 1. CUSTOM TITLE BAR                        -->
         <!-- ========================================== -->
         <Border Grid.Row="0" 
-                Background="#10131B" 
-                BorderBrush="{StaticResource BorderBrush}" 
+                Background="{DynamicResource TitleBarBrush}" 
+                BorderBrush="{DynamicResource BorderBrush}" 
                 BorderThickness="0,0,0,1" 
                 Padding="16,0,8,0">
             <Grid VerticalAlignment="Center">
@@ -1438,8 +1438,8 @@
         <!-- 3. BOTTOM STATUS BAR WITH REPORT & UPDATES -->
         <!-- ========================================== -->
         <Border Grid.Row="2" 
-                Background="#0D1016" 
-                BorderBrush="{StaticResource BorderBrush}" 
+                Background="{DynamicResource FooterBrush}" 
+                BorderBrush="{DynamicResource BorderBrush}" 
                 BorderThickness="0,1,0,0" 
                 Padding="16,0,12,0">
             <Grid VerticalAlignment="Center">
@@ -1451,12 +1451,14 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="10" />
                     <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="10" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
                 <!-- Status Pill Left -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Ellipse x:Name="StatusIndicatorDot" Width="7.5" Height="7.5" Fill="{StaticResource SuccessBrush}" Margin="0,0,8,0" />
-                    <TextBlock x:Name="StatusBarText" Text="Ready • SourceTX Companion v0.1" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" />
+                    <Ellipse x:Name="StatusIndicatorDot" Width="7.5" Height="7.5" Fill="{DynamicResource SuccessBrush}" Margin="0,0,8,0" />
+                    <TextBlock x:Name="StatusBarText" Text="Ready • SourceTX Companion v0.01" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" />
                 </StackPanel>
 
                 <!-- Hardware Tag Center-Right -->
@@ -1464,27 +1466,38 @@
                            Grid.Column="2" 
                            Text="ESP32-S3-FH4R2 • 4MB Flash • 2MB PSRAM • ST7796U" 
                            FontSize="10.5" 
-                           Foreground="{StaticResource TextMutedBrush}" 
+                           Foreground="{DynamicResource TextMutedBrush}" 
                            VerticalAlignment="Center"/>
 
+                <!-- Theme Toggle Switch Button -->
+                <Button x:Name="ThemeToggleButton" 
+                        Grid.Column="4" 
+                        Style="{StaticResource SmallBugButton}" 
+                        Click="ToggleTheme_Click" 
+                        ToolTip="Switch between Dark and Light application themes">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock x:Name="ThemeToggleText" Text="Theme: 🌙 Dark" FontSize="10.5" FontWeight="Medium" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
                 <!-- Check for Updates Button Bottom -->
-                <Button Grid.Column="4" 
+                <Button Grid.Column="6" 
                         Style="{StaticResource SmallBugButton}" 
                         Click="CheckForUpdates_Click" 
                         ToolTip="Check for latest SourceTX Companion and firmware updates">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock Text="🔄 Check for Updates" FontSize="10.5" FontWeight="Medium" Foreground="{StaticResource AccentBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Text="🔄 Check for Updates" FontSize="10.5" FontWeight="Medium" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
 
                 <!-- Bug Report Button Bottom Right -->
-                <Button Grid.Column="6" 
+                <Button Grid.Column="8" 
                         Style="{StaticResource SmallBugButton}" 
                         Click="ReportBug_Click" 
                         ToolTip="Open GitHub Issues to report a bug or suggest an improvement">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <Path Data="M 9 2 C 7.34 2 6 3.34 6 5 L 6 7 C 4.34 7 3 8.34 3 10 L 3 14 C 3 15.66 4.34 17 6 17 L 6 19 C 6 20.66 7.34 22 9 22 L 15 22 C 16.66 22 18 20.66 18 19 L 18 17 C 19.66 17 21 15.66 21 14 L 21 10 C 21 8.34 19.66 7 18 7 L 18 5 C 18 3.34 16.66 2 15 2 L 9 2 Z M 8 6 L 16 6 L 16 7 L 8 7 Z M 5 10 L 19 10 L 19 14 L 5 14 Z M 8 17 L 16 17 L 16 20 L 8 20 Z" 
-                              Fill="{StaticResource TextSecondaryBrush}" 
+                              Fill="{DynamicResource TextSecondaryBrush}" 
                               Width="10" Height="10" 
                               Stretch="Uniform" 
                               Margin="0,0,5,0" 
