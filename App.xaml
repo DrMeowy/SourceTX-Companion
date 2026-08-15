@@ -20,36 +20,66 @@
         <Color x:Key="WarningColor">#F59E0B</Color>
 
         <!-- Solid Brushes -->
-        <SolidColorBrush x:Key="BgDarkBrush" Color="{StaticResource BgDarkColor}" />
-        <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource SurfaceColor}" />
-        <SolidColorBrush x:Key="SurfaceElevatedBrush" Color="{StaticResource SurfaceElevatedColor}" />
-        <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource BorderColor}" />
-        <SolidColorBrush x:Key="BorderHoverBrush" Color="{StaticResource BorderHoverColor}" />
-        <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}" />
-        <SolidColorBrush x:Key="AccentHoverBrush" Color="{StaticResource AccentHoverColor}" />
-        <SolidColorBrush x:Key="AccentSecondaryBrush" Color="{StaticResource AccentSecondaryColor}" />
-        <SolidColorBrush x:Key="TextPrimaryBrush" Color="{StaticResource TextPrimaryColor}" />
-        <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondaryColor}" />
-        <SolidColorBrush x:Key="TextMutedBrush" Color="{StaticResource TextMutedColor}" />
-        <SolidColorBrush x:Key="SuccessBrush" Color="{StaticResource SuccessColor}" />
-        <SolidColorBrush x:Key="WarningBrush" Color="{StaticResource WarningColor}" />
+        <SolidColorBrush x:Key="BgDarkBrush" Color="#0D0F14" />
+        <SolidColorBrush x:Key="SurfaceBrush" Color="#151922" />
+        <SolidColorBrush x:Key="SurfaceElevatedBrush" Color="#1C2230" />
+        <SolidColorBrush x:Key="BorderBrush" Color="#252C3D" />
+        <SolidColorBrush x:Key="BorderHoverBrush" Color="#38445E" />
+        <SolidColorBrush x:Key="AccentBrush" Color="#00D2FF" />
+        <SolidColorBrush x:Key="AccentHoverBrush" Color="#33E1FF" />
+        <SolidColorBrush x:Key="AccentSecondaryBrush" Color="#3B82F6" />
+        <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F9FAFB" />
+        <SolidColorBrush x:Key="TextSecondaryBrush" Color="#9CA3AF" />
+        <SolidColorBrush x:Key="TextMutedBrush" Color="#6B7280" />
+        <SolidColorBrush x:Key="SuccessBrush" Color="#10B981" />
+        <SolidColorBrush x:Key="WarningBrush" Color="#F59E0B" />
         <SolidColorBrush x:Key="TitleBarBrush" Color="#10131B" />
         <SolidColorBrush x:Key="FooterBrush" Color="#0D1016" />
         <SolidColorBrush x:Key="ConsoleBgBrush" Color="#0A0C10" />
         <SolidColorBrush x:Key="CardInnerBgBrush" Color="#161F2E" />
         <SolidColorBrush x:Key="CardInnerBorderBrush" Color="#253A59" />
 
+        <!-- Card Accent Colors (Theme Adaptive) -->
+        <SolidColorBrush x:Key="CardInstallBgBrush" Color="#2B1A3D" />
+        <SolidColorBrush x:Key="CardInstallBorderBrush" Color="#5E3887" />
+        <SolidColorBrush x:Key="CardInstallAccentBrush" Color="#C084FC" />
+        <SolidColorBrush x:Key="CardInstallPillBrush" Color="#28173B" />
+
+        <SolidColorBrush x:Key="CardUpdateBgBrush" Color="#14283C" />
+        <SolidColorBrush x:Key="CardUpdateBorderBrush" Color="#254A6D" />
+        <SolidColorBrush x:Key="CardUpdateAccentBrush" Color="#00D2FF" />
+        <SolidColorBrush x:Key="CardUpdatePillBrush" Color="#1A2736" />
+
+        <SolidColorBrush x:Key="CardConfigBgBrush" Color="#1D1F38" />
+        <SolidColorBrush x:Key="CardConfigBorderBrush" Color="#343864" />
+        <SolidColorBrush x:Key="CardConfigAccentBrush" Color="#818CF8" />
+        <SolidColorBrush x:Key="CardConfigPillBrush" Color="#22233D" />
+
+        <SolidColorBrush x:Key="CardExportBgBrush" Color="#1A2F25" />
+        <SolidColorBrush x:Key="CardExportBorderBrush" Color="#2A5440" />
+        <SolidColorBrush x:Key="CardExportAccentBrush" Color="#34D399" />
+        <SolidColorBrush x:Key="CardExportPillBrush" Color="#1B3326" />
+
+        <SolidColorBrush x:Key="CardImportBgBrush" Color="#362615" />
+        <SolidColorBrush x:Key="CardImportBorderBrush" Color="#664620" />
+        <SolidColorBrush x:Key="CardImportAccentBrush" Color="#FBBF24" />
+        <SolidColorBrush x:Key="CardImportPillBrush" Color="#3B2A18" />
+
+        <SolidColorBrush x:Key="StatusBtnBgBrush" Color="#161C27" />
+        <SolidColorBrush x:Key="StatusBtnBorderBrush" Color="#253147" />
+        <SolidColorBrush x:Key="StatusBtnTextBrush" Color="#E2E8F0" />
+
         <!-- Base Text Block Style -->
         <Style TargetType="TextBlock">
             <Setter Property="FontFamily" Value="Segoe UI, -apple-system, BlinkMacSystemFont, Roboto, sans-serif" />
-            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
         </Style>
 
         <!-- Window Control Button Style (Minimize / Close) -->
         <Style x:Key="WindowControlBtn" TargetType="Button">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
             <Setter Property="Width" Value="36" />
             <Setter Property="Height" Value="30" />
             <Setter Property="Cursor" Value="Hand" />
@@ -64,8 +94,8 @@
             </Setter>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#2A3245" />
-                    <Setter Property="Foreground" Value="#FFFFFF" />
+                    <Setter Property="Background" Value="{DynamicResource BorderBrush}" />
+                    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -81,8 +111,8 @@
 
         <!-- Modern Action Card Style -->
         <Style x:Key="ActionCardBtn" TargetType="Button">
-            <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
-            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Template">
@@ -98,11 +128,11 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="CardBorder" Property="Background" Value="{StaticResource SurfaceElevatedBrush}" />
-                                <Setter TargetName="CardBorder" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                <Setter TargetName="CardBorder" Property="Background" Value="{DynamicResource SurfaceElevatedBrush}" />
+                                <Setter TargetName="CardBorder" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="CardBorder" Property="Background" Value="#171C26" />
+                                <Setter TargetName="CardBorder" Property="Background" Value="{DynamicResource SurfaceBrush}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -112,8 +142,8 @@
 
         <!-- Modern Accent Pill Button -->
         <Style x:Key="ModernAccentButton" TargetType="Button">
-            <Setter Property="Background" Value="{StaticResource AccentBrush}" />
-            <Setter Property="Foreground" Value="#0A0C10" />
+            <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="FontSize" Value="13" />
             <Setter Property="Padding" Value="18,10" />
@@ -130,14 +160,14 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="BtnBorder" Property="Background" Value="{StaticResource AccentHoverBrush}" />
+                                <Setter TargetName="BtnBorder" Property="Background" Value="{DynamicResource AccentHoverBrush}" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="BtnBorder" Property="Background" Value="#00B4DB" />
+                                <Setter TargetName="BtnBorder" Property="Background" Value="{DynamicResource AccentBrush}" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="BtnBorder" Property="Background" Value="#2D3748" />
-                                <Setter Property="Foreground" Value="#718096" />
+                                <Setter TargetName="BtnBorder" Property="Background" Value="{DynamicResource BorderBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -148,8 +178,8 @@
         <!-- Secondary Outline Button -->
         <Style x:Key="ModernOutlineButton" TargetType="Button">
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
-            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="FontWeight" Value="Medium" />
             <Setter Property="FontSize" Value="13" />
@@ -168,11 +198,11 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="BtnBorder" Property="Background" Value="{StaticResource SurfaceElevatedBrush}" />
-                                <Setter TargetName="BtnBorder" Property="BorderBrush" Value="{StaticResource BorderHoverBrush}" />
+                                <Setter TargetName="BtnBorder" Property="Background" Value="{DynamicResource SurfaceElevatedBrush}" />
+                                <Setter TargetName="BtnBorder" Property="BorderBrush" Value="{DynamicResource BorderHoverBrush}" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="BtnBorder" Property="Background" Value="{StaticResource SurfaceBrush}" />
+                                <Setter TargetName="BtnBorder" Property="Background" Value="{DynamicResource SurfaceBrush}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -180,11 +210,11 @@
             </Setter>
         </Style>
 
-        <!-- Small Bug Report Button Style -->
+        <!-- Small Status Bar Button Style -->
         <Style x:Key="SmallBugButton" TargetType="Button">
-            <Setter Property="Background" Value="#131720" />
-            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
-            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+            <Setter Property="Background" Value="{DynamicResource StatusBtnBgBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource StatusBtnTextBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource StatusBtnBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="FontWeight" Value="Medium" />
             <Setter Property="FontSize" Value="11" />
@@ -203,12 +233,11 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="BtnBorder" Property="Background" Value="#29161F" />
-                                <Setter TargetName="BtnBorder" Property="BorderBrush" Value="#E11D48" />
-                                <Setter Property="Foreground" Value="#FDA4AF" />
+                                <Setter TargetName="BtnBorder" Property="Background" Value="{DynamicResource SurfaceElevatedBrush}" />
+                                <Setter TargetName="BtnBorder" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="BtnBorder" Property="Background" Value="#3F1D2B" />
+                                <Setter TargetName="BtnBorder" Property="Background" Value="{DynamicResource SurfaceBrush}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
