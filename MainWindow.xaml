@@ -160,7 +160,7 @@
                                 </StackPanel>
 
                                 <TextBlock Grid.Row="2" 
-                                           Text="One-click provisioning: download a signed factory release, verify hardware, erase if selected, and flash the complete image."
+                                           Text="Clean factory build: select ESP32 &amp; display, chip preflight, erase flash, write bootloader, and verified factory image." 
                                            FontSize="11" 
                                            Foreground="{DynamicResource TextSecondaryBrush}" 
                                            TextWrapping="Wrap" 
