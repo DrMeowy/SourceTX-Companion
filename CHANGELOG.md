@@ -1,5 +1,12 @@
 # SourceTX Companion changelog
 
+## 0.1.2 - 2026-08-15
+
+- Fixed factory preflight rejecting esptool 5.x ESP32-S3 identification lines
+  that use padded columns after `Chip type:`.
+- Improved preflight errors so a failed esptool command is distinguished from
+  a completed command that did not explicitly identify an ESP32-S3.
+
 ## 0.1.1 - 2026-08-15
 
 - Fixed factory-image validation rejecting valid ESP-IDF partition tables by

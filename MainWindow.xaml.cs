@@ -130,7 +130,7 @@ namespace SourceTXCompanion
         public TimeoutWebClient()
         {
             TimeoutMilliseconds = 15000;
-            Headers[HttpRequestHeader.UserAgent] = "SourceTX-Companion/0.1.1";
+            Headers[HttpRequestHeader.UserAgent] = "SourceTX-Companion/0.1.2";
         }
 
         protected override WebRequest GetWebRequest(Uri address)
@@ -271,6 +271,34 @@ namespace SourceTXCompanion
                 result.ErrorMessage = "Firmware validation error: " + ex.Message;
                 return result;
             }
+        }
+    }
+
+    public static class EsptoolOutputParser
+    {
+        public static bool IsEsp32S3IdentificationLine(string line)
+        {
+            if (string.IsNullOrWhiteSpace(line)) return false;
+
+            return Regex.IsMatch(
+                line,
+                @"^\s*(?:Chip is\s+ESP32-S3\b|Chip type:\s*ESP32-S3\b|Detecting chip type\.\.\.\s*ESP32-S3\b)",
+                RegexOptions.IgnoreCase);
+        }
+
+        public static bool TryGetDetectedFlashSize(string line, out string flashSize)
+        {
+            flashSize = "";
+            if (string.IsNullOrWhiteSpace(line)) return false;
+
+            var match = Regex.Match(
+                line,
+                @"^\s*Detected flash size:\s*(\S+)\s*$",
+                RegexOptions.IgnoreCase);
+            if (!match.Success) return false;
+
+            flashSize = match.Groups[1].Value.Trim();
+            return flashSize.Length > 0;
         }
     }
 
@@ -923,7 +951,7 @@ namespace SourceTXCompanion
         {
             HideAllViews();
             HomeView.Visibility = Visibility.Visible;
-            StatusBarText.Text = "Ready • SourceTX Companion v0.1.1";
+            StatusBarText.Text = "Ready • SourceTX Companion v0.1.2";
         }
 
         private void NavToInstall_Click(object sender, RoutedEventArgs e)
@@ -1569,23 +1597,30 @@ namespace SourceTXCompanion
             bool preflightCommandSuccess = await RunProcessAsync(esptool, preflightArgs, (line) =>
             {
                 AppendInstallLog(line);
-                if (line.IndexOf("Chip is ESP32-S3", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                    line.IndexOf("Detecting chip type... ESP32-S3", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                    line.IndexOf("Chip type: ESP32-S3", StringComparison.OrdinalIgnoreCase) >= 0)
+                if (EsptoolOutputParser.IsEsp32S3IdentificationLine(line))
                 {
                     chipDetected = true;
                 }
-                if (line.IndexOf("Detected flash size:", StringComparison.OrdinalIgnoreCase) >= 0)
+                string parsedFlashSize;
+                if (EsptoolOutputParser.TryGetDetectedFlashSize(line, out parsedFlashSize))
                 {
-                    var m = Regex.Match(line, @"Detected flash size:\s*(\S+)");
-                    if (m.Success) detectedFlashSize = m.Groups[1].Value.Trim();
+                    detectedFlashSize = parsedFlashSize;
                 }
             });
 
-            if (!preflightCommandSuccess || !chipDetected)
+            if (!preflightCommandSuccess)
             {
-                InstallStatusText.Text = "Preflight failed: Target is not an ESP32-S3 or ROM bootloader is unresponsive.";
-                AppendInstallLog("[ERROR] Preflight failed. Ensure board is in bootloader mode (hold BOOT while connecting USB).");
+                InstallStatusText.Text = "Preflight failed: esptool could not complete hardware identification.";
+                AppendInstallLog("[ERROR] Preflight command failed. Ensure the selected port is correct and the board is in bootloader mode.");
+                ReleaseFactoryPackage(factoryPackage);
+                _isInstalling = false;
+                RunInstallButton.IsEnabled = true;
+                return;
+            }
+            if (!chipDetected)
+            {
+                InstallStatusText.Text = "Preflight aborted: esptool did not identify the target as an ESP32-S3.";
+                AppendInstallLog("[ERROR] Target identity was not explicitly reported as ESP32-S3; flashing fails closed.");
                 ReleaseFactoryPackage(factoryPackage);
                 _isInstalling = false;
                 RunInstallButton.IsEnabled = true;
@@ -2397,7 +2432,7 @@ namespace SourceTXCompanion
 
         public static class UpdateChecker
         {
-            public const string CURRENT_VERSION = "0.1.1";
+            public const string CURRENT_VERSION = "0.1.2";
             private const string GITHUB_RELEASES_API = "https://api.github.com/repos/DrMeowy/SourceTX-Companion/releases/latest";
             private const string GITHUB_TARGETS_URL = "https://raw.githubusercontent.com/DrMeowy/SourceTX-Companion/main/targets.json";
             private const string GITHUB_RELEASES_PAGE = "https://github.com/DrMeowy/SourceTX-Companion/releases";
@@ -2428,7 +2463,7 @@ namespace SourceTXCompanion
                         try
                         {
                             var req = (System.Net.HttpWebRequest)System.Net.WebRequest.Create(GITHUB_RELEASES_API);
-                            req.UserAgent = "SourceTXCompanion-UpdateChecker/0.1.1";
+                            req.UserAgent = "SourceTXCompanion-UpdateChecker/0.1.2";
                             req.Timeout = 5000;
                             req.Accept = "application/vnd.github.v3+json";
 
@@ -2456,7 +2491,7 @@ namespace SourceTXCompanion
                         if (string.IsNullOrEmpty(latestVer))
                         {
                             var req = (System.Net.HttpWebRequest)System.Net.WebRequest.Create(GITHUB_TARGETS_URL);
-                            req.UserAgent = "SourceTXCompanion-UpdateChecker/0.1.1";
+                            req.UserAgent = "SourceTXCompanion-UpdateChecker/0.1.2";
                             req.Timeout = 5000;
 
                             using (var resp = (System.Net.HttpWebResponse)req.GetResponse())
@@ -2590,7 +2625,7 @@ namespace SourceTXCompanion
             }
             finally
             {
-                StatusBarText.Text = "Ready • SourceTX Companion v0.1.1";
+                StatusBarText.Text = "Ready • SourceTX Companion v0.1.2";
                 if (btn != null) btn.IsEnabled = true;
             }
         }
