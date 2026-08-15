@@ -130,7 +130,7 @@ namespace SourceTXCompanion
         public TimeoutWebClient()
         {
             TimeoutMilliseconds = 15000;
-            Headers[HttpRequestHeader.UserAgent] = "SourceTX-Companion/0.1.2";
+            Headers[HttpRequestHeader.UserAgent] = "SourceTX-Companion/0.1.3";
         }
 
         protected override WebRequest GetWebRequest(Uri address)
@@ -951,7 +951,7 @@ namespace SourceTXCompanion
         {
             HideAllViews();
             HomeView.Visibility = Visibility.Visible;
-            StatusBarText.Text = "Ready • SourceTX Companion v0.1.2";
+            StatusBarText.Text = "Ready • SourceTX Companion v0.1.3";
         }
 
         private void NavToInstall_Click(object sender, RoutedEventArgs e)
@@ -1590,7 +1590,7 @@ namespace SourceTXCompanion
             AppendInstallLog(string.Format("[PREFLIGHT] Connecting to ESP32-S3 on {0}...", selectedPort));
 
             // Step 1: Preflight Hardware Identification (Strict Chip & Flash Size Match)
-            string preflightArgs = string.Format("--chip esp32s3 --port {0} --baud 115200 flash_id", selectedPort);
+            string preflightArgs = string.Format("--chip esp32s3 --port {0} --baud 115200 --before default-reset --after hard-reset flash-id", selectedPort);
             bool chipDetected = false;
             string detectedFlashSize = "";
 
@@ -1653,10 +1653,10 @@ namespace SourceTXCompanion
             // Step 2: Full Chip Erase (if requested)
             if (EraseChipCheckBox != null && EraseChipCheckBox.IsChecked == true)
             {
-                InstallStatusText.Text = "Step 2/3: Erasing entire flash memory (erase_flash)...";
+                InstallStatusText.Text = "Step 2/3: Erasing entire flash memory (erase-flash)...";
                 AppendInstallLog("[ERASE] Executing full chip erase on SPI flash...");
 
-                string eraseArgs = string.Format("--chip esp32s3 --port {0} --baud {1} erase_flash", selectedPort, baud);
+                string eraseArgs = string.Format("--chip esp32s3 --port {0} --baud {1} --before default-reset --after hard-reset erase-flash", selectedPort, baud);
                 bool eraseSuccess = await RunProcessAsync(esptool, eraseArgs, (line) => AppendInstallLog(line));
 
                 if (!eraseSuccess)
@@ -1672,11 +1672,11 @@ namespace SourceTXCompanion
             }
 
             // Step 3: Write Factory Image at 0x0000 with selected Board flash parameters
-            InstallStatusText.Text = string.Format("Step 3/3: Flashing SourceTX factory binary @ 0x0000 (--flash_size {0})...", board.FlashSize);
-            AppendInstallLog(string.Format("[FLASH] Writing {0} ({1:N0} bytes @ 0x0000) --flash_size {2} --flash_mode {3}...",
+            InstallStatusText.Text = string.Format("Step 3/3: Flashing SourceTX factory binary @ 0x0000 (--flash-size {0})...", board.FlashSize);
+            AppendInstallLog(string.Format("[FLASH] Writing {0} ({1:N0} bytes @ 0x0000) --flash-size {2} --flash-mode {3}...",
                 Path.GetFileName(factoryBinary), new FileInfo(factoryBinary).Length, board.FlashSize, board.FlashMode));
 
-            string writeArgs = string.Format("--chip esp32s3 --port {0} --baud {1} --before default_reset --after hard_reset write_flash -z --flash_mode {2} --flash_freq {3} --flash_size {4} 0x0000 \"{5}\"",
+            string writeArgs = string.Format("--chip esp32s3 --port {0} --baud {1} --before default-reset --after hard-reset write-flash -z --flash-mode {2} --flash-freq {3} --flash-size {4} 0x0000 \"{5}\"",
                 selectedPort, baud, board.FlashMode, board.FlashFreq, board.FlashSize, factoryBinary);
 
             bool writeSuccess = await RunProcessAsync(esptool, writeArgs, (line) =>
@@ -1910,9 +1910,9 @@ namespace SourceTXCompanion
             AppendFlashLog("==================================================");
             AppendFlashLog(string.Format("[FLASH] Verified Image: {0} ({1:N0} bytes @ {2})", Path.GetFileName(targetFile), validation.FileSizeBytes, offset));
             AppendFlashLog(string.Format("[FLASH] SHA-256: {0}", validation.Sha256Hash));
-            AppendFlashLog(string.Format("[FLASH] Writing flash --flash_size {0} --flash_mode {1}...", board.FlashSize, board.FlashMode));
+            AppendFlashLog(string.Format("[FLASH] Writing flash --flash-size {0} --flash-mode {1}...", board.FlashSize, board.FlashMode));
 
-            string args = string.Format("--chip esp32s3 --port {0} --baud {1} --before default_reset --after hard_reset write_flash -z --flash_mode {2} --flash_freq {3} --flash_size {4} {5} \"{6}\"",
+            string args = string.Format("--chip esp32s3 --port {0} --baud {1} --before default-reset --after hard-reset write-flash -z --flash-mode {2} --flash-freq {3} --flash-size {4} {5} \"{6}\"",
                 selectedPort, baud, board.FlashMode, board.FlashFreq, board.FlashSize, offset, targetFile);
 
             bool success = await RunProcessAsync(esptool, args, (line) =>
@@ -1963,8 +1963,18 @@ namespace SourceTXCompanion
                         UseShellExecute = false,
                         RedirectStandardOutput = true,
                         RedirectStandardError = true,
+                        StandardOutputEncoding = new UTF8Encoding(false),
+                        StandardErrorEncoding = new UTF8Encoding(false),
                         CreateNoWindow = true
                     };
+
+                    // PlatformIO forces UTF-8 before invoking esptool. Do the
+                    // same for direct Companion launches so esptool 5.x can
+                    // render its Unicode progress bar on Windows without a
+                    // CP1252 UnicodeEncodeError halfway through a flash.
+                    psi.EnvironmentVariables["PYTHONIOENCODING"] = "utf-8";
+                    psi.EnvironmentVariables["PYTHONUTF8"] = "1";
+                    psi.EnvironmentVariables["NO_COLOR"] = "1";
 
                     if (!string.IsNullOrEmpty(workingDir))
                     {
@@ -2432,7 +2442,7 @@ namespace SourceTXCompanion
 
         public static class UpdateChecker
         {
-            public const string CURRENT_VERSION = "0.1.2";
+            public const string CURRENT_VERSION = "0.1.3";
             private const string GITHUB_RELEASES_API = "https://api.github.com/repos/DrMeowy/SourceTX-Companion/releases/latest";
             private const string GITHUB_TARGETS_URL = "https://raw.githubusercontent.com/DrMeowy/SourceTX-Companion/main/targets.json";
             private const string GITHUB_RELEASES_PAGE = "https://github.com/DrMeowy/SourceTX-Companion/releases";
@@ -2463,7 +2473,7 @@ namespace SourceTXCompanion
                         try
                         {
                             var req = (System.Net.HttpWebRequest)System.Net.WebRequest.Create(GITHUB_RELEASES_API);
-                            req.UserAgent = "SourceTXCompanion-UpdateChecker/0.1.2";
+                            req.UserAgent = "SourceTXCompanion-UpdateChecker/0.1.3";
                             req.Timeout = 5000;
                             req.Accept = "application/vnd.github.v3+json";
 
@@ -2491,7 +2501,7 @@ namespace SourceTXCompanion
                         if (string.IsNullOrEmpty(latestVer))
                         {
                             var req = (System.Net.HttpWebRequest)System.Net.WebRequest.Create(GITHUB_TARGETS_URL);
-                            req.UserAgent = "SourceTXCompanion-UpdateChecker/0.1.2";
+                            req.UserAgent = "SourceTXCompanion-UpdateChecker/0.1.3";
                             req.Timeout = 5000;
 
                             using (var resp = (System.Net.HttpWebResponse)req.GetResponse())
@@ -2625,7 +2635,7 @@ namespace SourceTXCompanion
             }
             finally
             {
-                StatusBarText.Text = "Ready • SourceTX Companion v0.1.2";
+                StatusBarText.Text = "Ready • SourceTX Companion v0.1.3";
                 if (btn != null) btn.IsEnabled = true;
             }
         }

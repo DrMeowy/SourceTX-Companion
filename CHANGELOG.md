@@ -1,5 +1,12 @@
 # SourceTX Companion changelog
 
+## 0.1.3 - 2026-08-15
+
+- Fixed direct esptool 5.x writes crashing mid-flash on Windows when its
+  Unicode progress bar was redirected through a CP1252 process stream.
+- Matched PlatformIO's UTF-8 subprocess environment and switched direct
+  esptool calls to the current hyphenated command and option names.
+
 ## 0.1.2 - 2026-08-15
 
 - Fixed factory preflight rejecting esptool 5.x ESP32-S3 identification lines
