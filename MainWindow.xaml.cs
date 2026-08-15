@@ -1592,15 +1592,9 @@ namespace SourceTXCompanion
 
         private void SetBrushColor(string key, Color color)
         {
-            var brush = Application.Current.Resources[key] as SolidColorBrush;
-            if (brush != null)
-            {
-                brush.Color = color;
-            }
-            else
-            {
-                Application.Current.Resources[key] = new SolidColorBrush(color);
-            }
+            var brush = new SolidColorBrush(color);
+            brush.Freeze();
+            Application.Current.Resources[key] = brush;
         }
 
         private void ApplyTheme(bool isDark)

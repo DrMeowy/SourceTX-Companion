@@ -483,8 +483,8 @@
 
                 <!-- Install Content Deck -->
                 <Border Grid.Row="1" 
-                        Background="{StaticResource SurfaceBrush}" 
-                        BorderBrush="{StaticResource BorderBrush}" 
+                        Background="{DynamicResource SurfaceBrush}" 
+                        BorderBrush="{DynamicResource BorderBrush}" 
                         BorderThickness="1" 
                         CornerRadius="12" 
                         Padding="18,12">
@@ -513,36 +513,36 @@
                             </Grid.ColumnDefinitions>
 
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="1. Select ESP32 Board" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+                                <TextBlock Text="1. Select ESP32 Board" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
                                 <ComboBox x:Name="InstallBoardComboBox" Height="32" SelectionChanged="HardwareTarget_Changed" />
                             </StackPanel>
 
                             <StackPanel Grid.Column="2">
-                                <TextBlock Text="2. Select Display Panel" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+                                <TextBlock Text="2. Select Display Panel" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
                                 <ComboBox x:Name="InstallDisplayComboBox" Height="32" SelectionChanged="HardwareTarget_Changed" />
                             </StackPanel>
 
                             <StackPanel Grid.Column="4">
-                                <TextBlock Text="Target Serial Port (ESP32 Auto-Detect)" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+                                <TextBlock Text="Target Serial Port (ESP32 Auto-Detect)" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
                                 <ComboBox x:Name="InstallPortComboBox" Height="32" />
                             </StackPanel>
 
                             <Button Grid.Column="6" 
                                     Style="{StaticResource ModernAccentButton}" 
                                     Background="#1A283C"
-                                    BorderBrush="{StaticResource AccentBrush}"
+                                    BorderBrush="{DynamicResource AccentBrush}"
                                     BorderThickness="1"
                                     Height="32" 
                                     VerticalAlignment="Bottom" 
                                     Click="AutoDetectPorts_Click"
                                     ToolTip="Auto-detect connected ESP32-S3 and scan serial devices">
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="⚡ Auto-Detect" FontWeight="SemiBold" FontSize="11" Foreground="{StaticResource AccentBrush}" />
+                                    <TextBlock Text="⚡ Auto-Detect" FontWeight="SemiBold" FontSize="11" Foreground="{DynamicResource AccentBrush}" />
                                 </StackPanel>
                             </Button>
 
                             <StackPanel Grid.Column="8">
-                                <TextBlock Text="Flashing Baud" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+                                <TextBlock Text="Flashing Baud" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
                                 <ComboBox x:Name="InstallBaudComboBox" Height="32" SelectedIndex="0">
                                     <ComboBoxItem Content="115200 (PlatformIO Default)" />
                                     <ComboBoxItem Content="460800 (Standard)" />
@@ -559,8 +559,8 @@
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0">
-                                    <TextBlock x:Name="InstallSpecsBlock" Text="Target: ESP32-S3-FH4R2 (240MHz, 4MB Flash DIO/80M, 2MB PSRAM) • 3.5&quot; ST7796U 480x320 SPI (Rot 3)" FontSize="10.5" FontWeight="SemiBold" Foreground="{StaticResource AccentBrush}" />
-                                    <TextBlock x:Name="InstallPinoutBlock" Text="Pinout: Steering GPIO 6, Throttle GPIO 5 | CRSF GPIO 42 (Single-Wire) | TFT CS 14, DC 13, MOSI 7, CLK 2" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,1,0,0" />
+                                    <TextBlock x:Name="InstallSpecsBlock" Text="Target: ESP32-S3-FH4R2 (240MHz, 4MB Flash DIO/80M, 2MB PSRAM) • 3.5&quot; ST7796U 480x320 SPI (Rot 3)" FontSize="10.5" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" />
+                                    <TextBlock x:Name="InstallPinoutBlock" Text="Pinout: Steering GPIO 6, Throttle GPIO 5 | CRSF GPIO 42 (Single-Wire) | TFT CS 14, DC 13, MOSI 7, CLK 2" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,1,0,0" />
                                 </StackPanel>
                                 <Border Grid.Column="1" x:Name="InstallTargetStatusBadge" Background="#1B3324" CornerRadius="4" Padding="6,2" VerticalAlignment="Center">
                                     <TextBlock x:Name="InstallTargetStatusText" Text="Target Verified" FontSize="9.5" FontWeight="Bold" Foreground="#10B981" />
@@ -577,7 +577,7 @@
                             </Grid.ColumnDefinitions>
 
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="Verified Factory Package" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+                                <TextBlock Text="Verified Factory Package" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
                                 <TextBox x:Name="InstallPackagePathBox" 
                                          Text="SourceTX_ESP32S3_SuperMini_Factory.bin (Bootloader, Partitions &amp; App @ 0x0000)" 
                                          Height="32" 
@@ -587,14 +587,14 @@
 
                             <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="0,10,0,0">
                                 <CheckBox x:Name="EraseChipCheckBox" IsChecked="True" Content="Full Chip Erase before flashing (erase_flash)" Margin="0,0,0,3" FontSize="11"/>
-                                <TextBlock x:Name="InstallNvsLabel" Text="NVS model catalog (0x3D0000) provisioned automatically on boot" FontSize="10" Foreground="{StaticResource TextMutedBrush}" />
+                                <TextBlock x:Name="InstallNvsLabel" Text="NVS model catalog (0x3D0000) provisioned automatically on boot" FontSize="10" Foreground="{DynamicResource TextMutedBrush}" />
                             </StackPanel>
                         </Grid>
 
                         <!-- Progress Bar & Status -->
                         <StackPanel Grid.Row="3" Margin="0,0,0,6">
                             <Grid Margin="0,0,0,2">
-                                <TextBlock x:Name="InstallStatusText" Text="Ready to run verified factory installation via esptool" FontSize="10.5" Foreground="{StaticResource TextSecondaryBrush}" />
+                                <TextBlock x:Name="InstallStatusText" Text="Ready to run verified factory installation via esptool" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" />
                                 <TextBlock x:Name="InstallPercentText" Text="0%" FontSize="10.5" FontWeight="SemiBold" Foreground="#C084FC" HorizontalAlignment="Right" />
                             </Grid>
                             <ProgressBar x:Name="InstallProgressBar" Value="0" Maximum="100" Height="5" Foreground="#C084FC" />
@@ -603,7 +603,7 @@
                         <!-- Console Output Log Box -->
                         <Border Grid.Row="4" 
                                 Background="#0A0C10" 
-                                BorderBrush="{StaticResource BorderBrush}" 
+                                BorderBrush="{DynamicResource BorderBrush}" 
                                 BorderThickness="1" 
                                 CornerRadius="6" 
                                 Padding="8" 
@@ -659,8 +659,8 @@
 
                 <!-- Update Content Deck -->
                 <Border Grid.Row="1" 
-                        Background="{StaticResource SurfaceBrush}" 
-                        BorderBrush="{StaticResource BorderBrush}" 
+                        Background="{DynamicResource SurfaceBrush}" 
+                        BorderBrush="{DynamicResource BorderBrush}" 
                         BorderThickness="1" 
                         CornerRadius="12" 
                         Padding="18,12">
@@ -690,17 +690,17 @@
                             </Grid.ColumnDefinitions>
 
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="1. ESP32 Board" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+                                <TextBlock Text="1. ESP32 Board" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
                                 <ComboBox x:Name="UpdateBoardComboBox" Height="32" SelectionChanged="HardwareTarget_Changed" />
                             </StackPanel>
 
                             <StackPanel Grid.Column="2">
-                                <TextBlock Text="2. Display Panel" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+                                <TextBlock Text="2. Display Panel" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
                                 <ComboBox x:Name="UpdateDisplayComboBox" Height="32" SelectionChanged="HardwareTarget_Changed" />
                             </StackPanel>
 
                             <StackPanel Grid.Column="4">
-                                <TextBlock Text="Flashing Mode" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+                                <TextBlock Text="Flashing Mode" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
                                 <ComboBox x:Name="FlashModeComboBox" Height="32" SelectionChanged="FlashMode_Changed">
                                     <ComboBoxItem Content="Full Factory (0x0000)" IsSelected="True" />
                                     <ComboBoxItem Content="App (0x10000)" />
@@ -708,26 +708,26 @@
                             </StackPanel>
 
                             <StackPanel Grid.Column="6">
-                                <TextBlock Text="Target Serial Port" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+                                <TextBlock Text="Target Serial Port" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
                                 <ComboBox x:Name="PortComboBox" Height="32" />
                             </StackPanel>
 
                             <Button Grid.Column="8" 
                                     Style="{StaticResource ModernAccentButton}" 
                                     Background="#1A283C"
-                                    BorderBrush="{StaticResource AccentBrush}"
+                                    BorderBrush="{DynamicResource AccentBrush}"
                                     BorderThickness="1"
                                     Height="32" 
                                     VerticalAlignment="Bottom" 
                                     Click="AutoDetectPorts_Click"
                                     ToolTip="Auto-detect connected ESP32-S3 and scan serial devices">
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="⚡ Auto-Detect" FontWeight="SemiBold" FontSize="11" Foreground="{StaticResource AccentBrush}" />
+                                    <TextBlock Text="⚡ Auto-Detect" FontWeight="SemiBold" FontSize="11" Foreground="{DynamicResource AccentBrush}" />
                                 </StackPanel>
                             </Button>
 
                             <StackPanel Grid.Column="10">
-                                <TextBlock Text="Baud Rate" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+                                <TextBlock Text="Baud Rate" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
                                 <ComboBox x:Name="BaudComboBox" Height="32" SelectedIndex="0">
                                     <ComboBoxItem Content="115200 (Default)" />
                                     <ComboBoxItem Content="460800" />
@@ -747,7 +747,7 @@
                             </Grid.ColumnDefinitions>
 
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="Firmware Binary (.bin)" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+                                <TextBlock Text="Firmware Binary (.bin)" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
                                 <TextBox x:Name="FirmwarePathBox" 
                                          Text="SourceTX_ESP32S3_SuperMini_Factory.bin (Full Image @ 0x0000)" 
                                          Height="32" 
@@ -765,14 +765,14 @@
                             <Button Grid.Column="4" 
                                     Style="{StaticResource ModernAccentButton}" 
                                     Background="#1D2A3D"
-                                    BorderBrush="{StaticResource AccentBrush}"
+                                    BorderBrush="{DynamicResource AccentBrush}"
                                     BorderThickness="1"
                                     Height="32" 
                                     VerticalAlignment="Bottom"
                                     Click="RebuildFirmware_Click"
                                     ToolTip="Recompile firmware from source using integrated PlatformIO CLI">
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="🔨 Rebuild from Source" FontWeight="SemiBold" FontSize="11" Foreground="{StaticResource AccentBrush}" />
+                                    <TextBlock Text="🔨 Rebuild from Source" FontWeight="SemiBold" FontSize="11" Foreground="{DynamicResource AccentBrush}" />
                                 </StackPanel>
                             </Button>
                         </Grid>
@@ -780,8 +780,8 @@
                         <!-- Progress Bar & Status -->
                         <StackPanel Grid.Row="2" Margin="0,0,0,6">
                             <Grid Margin="0,0,0,2">
-                                <TextBlock x:Name="FlashStatusText" Text="Ready to flash ESP32-S3 transmitter" FontSize="10.5" Foreground="{StaticResource TextSecondaryBrush}" />
-                                <TextBlock x:Name="FlashPercentText" Text="0%" FontSize="10.5" FontWeight="SemiBold" Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Right" />
+                                <TextBlock x:Name="FlashStatusText" Text="Ready to flash ESP32-S3 transmitter" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" />
+                                <TextBlock x:Name="FlashPercentText" Text="0%" FontSize="10.5" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Right" />
                             </Grid>
                             <ProgressBar x:Name="FlashProgressBar" Value="0" Maximum="100" Height="5" />
                         </StackPanel>
@@ -789,7 +789,7 @@
                         <!-- Console Output Log Box -->
                         <Border Grid.Row="3" 
                                 Background="#0A0C10" 
-                                BorderBrush="{StaticResource BorderBrush}" 
+                                BorderBrush="{DynamicResource BorderBrush}" 
                                 BorderThickness="1" 
                                 CornerRadius="6" 
                                 Padding="8" 
@@ -844,8 +844,8 @@
 
                 <!-- Config Tabbed Interface -->
                 <Border Grid.Row="1" 
-                        Background="{StaticResource SurfaceBrush}" 
-                        BorderBrush="{StaticResource BorderBrush}" 
+                        Background="{DynamicResource SurfaceBrush}" 
+                        BorderBrush="{DynamicResource BorderBrush}" 
                         BorderThickness="1" 
                         CornerRadius="12" 
                         Padding="18,12">
@@ -861,8 +861,8 @@
                         <Border Grid.Row="0" Background="#1C1F2B" BorderBrush="#303A52" BorderThickness="1" CornerRadius="6" Padding="10,5" Margin="0,0,0,8">
                             <Grid>
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="ℹ Configuration &amp; Builder: " FontSize="10.5" FontWeight="SemiBold" Foreground="{StaticResource AccentBrush}"/>
-                                    <TextBlock Text="Configure hardware GPIO pinouts below and rebuild directly with PlatformIO without opening VSCode." FontSize="10.5" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <TextBlock Text="ℹ Configuration &amp; Builder: " FontSize="10.5" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}"/>
+                                    <TextBlock Text="Configure hardware GPIO pinouts below and rebuild directly with PlatformIO without opening VSCode." FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}"/>
                                 </StackPanel>
                             </Grid>
                         </Border>
@@ -906,7 +906,7 @@
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Grid.Column="0">
-                                        <TextBlock Text="Steering ADC Wiper" FontSize="10.5" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+                                        <TextBlock Text="Steering ADC Wiper" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
                                         <ComboBox x:Name="PinSteeringBox" Height="30" SelectedIndex="5" SelectionChanged="PinSelection_Changed">
                                             <ComboBoxItem Content="GPIO 1 (ADC1_CH0)" />
                                             <ComboBoxItem Content="GPIO 2 (ADC1_CH1)" />
@@ -921,7 +921,7 @@
                                         </ComboBox>
                                     </StackPanel>
                                     <StackPanel Grid.Column="2">
-                                        <TextBlock Text="Throttle ADC Wiper" FontSize="10.5" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+                                        <TextBlock Text="Throttle ADC Wiper" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
                                         <ComboBox x:Name="PinThrottleBox" Height="30" SelectedIndex="4" SelectionChanged="PinSelection_Changed">
                                             <ComboBoxItem Content="GPIO 1 (ADC1_CH0)" />
                                             <ComboBoxItem Content="GPIO 2 (ADC1_CH1)" />
@@ -936,7 +936,7 @@
                                         </ComboBox>
                                     </StackPanel>
                                     <StackPanel Grid.Column="4">
-                                        <TextBlock Text="CRSF Single-Wire UART" FontSize="10.5" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+                                        <TextBlock Text="CRSF Single-Wire UART" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
                                         <ComboBox x:Name="PinCrsfBox" Height="30" SelectedIndex="0" SelectionChanged="PinSelection_Changed">
                                             <ComboBoxItem Content="GPIO 42 (UART1 Single-Wire) [Default]" />
                                             <ComboBoxItem Content="GPIO 43 (UART1 TX)" />
@@ -964,27 +964,27 @@
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Grid.Column="0">
-                                        <TextBlock Text="MOSI" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+                                        <TextBlock Text="MOSI" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
                                         <TextBox Text="GPIO 7" Height="28" IsReadOnly="True" VerticalContentAlignment="Center" FontSize="10.5" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="2">
-                                        <TextBlock Text="SCLK" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+                                        <TextBlock Text="SCLK" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
                                         <TextBox Text="GPIO 2" Height="28" IsReadOnly="True" VerticalContentAlignment="Center" FontSize="10.5" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="4">
-                                        <TextBlock Text="CS" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+                                        <TextBlock Text="CS" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
                                         <TextBox Text="GPIO 14" Height="28" IsReadOnly="True" VerticalContentAlignment="Center" FontSize="10.5" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="6">
-                                        <TextBlock Text="DC" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+                                        <TextBlock Text="DC" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
                                         <TextBox Text="GPIO 13" Height="28" IsReadOnly="True" VerticalContentAlignment="Center" FontSize="10.5" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="8">
-                                        <TextBlock Text="RST" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+                                        <TextBlock Text="RST" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
                                         <TextBox Text="GPIO 10" Height="28" IsReadOnly="True" VerticalContentAlignment="Center" FontSize="10.5" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="10">
-                                        <TextBlock Text="Backlight" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+                                        <TextBlock Text="Backlight" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
                                         <TextBox Text="GPIO 3" Height="28" IsReadOnly="True" VerticalContentAlignment="Center" FontSize="10.5" />
                                     </StackPanel>
                                 </Grid>
@@ -1002,19 +1002,19 @@
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Grid.Column="0">
-                                        <TextBlock Text="I2C SDA (Touch/INA219)" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+                                        <TextBlock Text="I2C SDA (Touch/INA219)" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
                                         <TextBox Text="GPIO 8 (Shared 100kHz)" Height="28" IsReadOnly="True" VerticalContentAlignment="Center" FontSize="10.5" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="2">
-                                        <TextBlock Text="I2C SCL (Touch/INA219)" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+                                        <TextBlock Text="I2C SCL (Touch/INA219)" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
                                         <TextBox Text="GPIO 9 (Shared 100kHz)" Height="28" IsReadOnly="True" VerticalContentAlignment="Center" FontSize="10.5" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="4">
-                                        <TextBlock Text="Touch Reset (RST)" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+                                        <TextBlock Text="Touch Reset (RST)" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
                                         <TextBox Text="GPIO 11" Height="28" IsReadOnly="True" VerticalContentAlignment="Center" FontSize="10.5" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="6">
-                                        <TextBlock Text="Touch Interrupt (INT)" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+                                        <TextBlock Text="Touch Interrupt (INT)" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
                                         <TextBox Text="GPIO 12" Height="28" IsReadOnly="True" VerticalContentAlignment="Center" FontSize="10.5" />
                                     </StackPanel>
                                 </Grid>
@@ -1032,7 +1032,7 @@
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Grid.Column="0">
-                                        <TextBlock Text="CH1 (Steering Wheel — GPIO 6 Wiper ADC)" FontSize="10.5" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+                                        <TextBlock Text="CH1 (Steering Wheel — GPIO 6 Wiper ADC)" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
                                         <ComboBox SelectedIndex="0" Height="32">
                                             <ComboBoxItem Content="Steering (Standard)" />
                                             <ComboBoxItem Content="Steering (Inverted)" />
@@ -1040,7 +1040,7 @@
                                         </ComboBox>
                                     </StackPanel>
                                     <StackPanel Grid.Column="2">
-                                        <TextBlock Text="CH2 (Throttle / Brake — GPIO 5 Wiper ADC)" FontSize="10.5" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+                                        <TextBlock Text="CH2 (Throttle / Brake — GPIO 5 Wiper ADC)" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
                                         <ComboBox SelectedIndex="0" Height="32">
                                             <ComboBoxItem Content="Forward / Brake / Reverse" />
                                             <ComboBoxItem Content="Forward / Reverse (Crawler Direct)" />
@@ -1055,7 +1055,7 @@
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Grid.Column="0">
-                                        <TextBlock Text="CH3 (Aux 1 / 2-Speed Shift / Dual ESC Front)" FontSize="10.5" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+                                        <TextBlock Text="CH3 (Aux 1 / 2-Speed Shift / Dual ESC Front)" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
                                         <ComboBox SelectedIndex="0" Height="32">
                                             <ComboBoxItem Content="Aux 1 (2-Speed Shift)" />
                                             <ComboBoxItem Content="Dual ESC (Front Motor)" />
@@ -1063,7 +1063,7 @@
                                         </ComboBox>
                                     </StackPanel>
                                     <StackPanel Grid.Column="2">
-                                        <TextBlock Text="CH4 (Aux 2 / Dig Unit / Dual ESC Rear)" FontSize="10.5" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+                                        <TextBlock Text="CH4 (Aux 2 / Dig Unit / Dual ESC Rear)" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
                                         <ComboBox SelectedIndex="1" Height="32">
                                             <ComboBoxItem Content="Aux 2 (General)" />
                                             <ComboBoxItem Content="Dig Lock / Freewheel" />
@@ -1085,7 +1085,7 @@
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Grid.Column="0">
-                                        <TextBlock Text="Dual ESC MOA Crawler Mixing (%)" FontSize="10.5" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+                                        <TextBlock Text="Dual ESC MOA Crawler Mixing (%)" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
                                         <ComboBox SelectedIndex="1" Height="32">
                                             <ComboBoxItem Content="Disabled (Single ESC)" />
                                             <ComboBoxItem Content="50:50 Balanced MOA" />
@@ -1094,7 +1094,7 @@
                                         </ComboBox>
                                     </StackPanel>
                                     <StackPanel Grid.Column="2">
-                                        <TextBlock Text="Neutral Drag Brake (%)" FontSize="10.5" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+                                        <TextBlock Text="Neutral Drag Brake (%)" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
                                         <ComboBox SelectedIndex="2" Height="32">
                                             <ComboBoxItem Content="0% (Freewheel Coast)" />
                                             <ComboBoxItem Content="25% Mild Drag" />
@@ -1117,7 +1117,7 @@
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Grid.Column="0">
-                                        <TextBlock Text="CRSF Packet Rate" FontSize="10.5" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+                                        <TextBlock Text="CRSF Packet Rate" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
                                         <ComboBox SelectedIndex="2" Height="32">
                                             <ComboBoxItem Content="50 Hz" />
                                             <ComboBoxItem Content="150 Hz" />
@@ -1126,7 +1126,7 @@
                                         </ComboBox>
                                     </StackPanel>
                                     <StackPanel Grid.Column="2">
-                                        <TextBlock Text="Telemetry Ratio" FontSize="10.5" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+                                        <TextBlock Text="Telemetry Ratio" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
                                         <ComboBox SelectedIndex="1" Height="32">
                                             <ComboBoxItem Content="1:128 (Ultra Fast Control)" />
                                             <ComboBoxItem Content="1:64 (Standard Telemetry)" />
@@ -1148,11 +1148,11 @@
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Grid.Column="0">
-                                        <TextBlock Text="Active Model Profile Name" FontSize="10.5" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+                                        <TextBlock Text="Active Model Profile Name" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
                                         <TextBox Text="Crawler 4x4 MOA Dual ESC" Height="32" VerticalContentAlignment="Center" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="2">
-                                        <TextBlock Text="ST7796U Backlight PWM (GPIO 3)" FontSize="10.5" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+                                        <TextBlock Text="ST7796U Backlight PWM (GPIO 3)" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
                                         <ComboBox SelectedIndex="3" Height="32">
                                             <ComboBoxItem Content="25%" />
                                             <ComboBoxItem Content="50%" />
@@ -1172,12 +1172,12 @@
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                                 <Button Style="{StaticResource ModernAccentButton}" 
                                         Background="#1D2A3D"
-                                        BorderBrush="{StaticResource AccentBrush}"
+                                        BorderBrush="{DynamicResource AccentBrush}"
                                         BorderThickness="1"
                                         Height="32" 
                                         Margin="0,0,8,0" 
                                         Click="RebuildFirmware_Click">
-                                    <TextBlock Text="🔨 Rebuild from Source (PlatformIO)" FontWeight="SemiBold" FontSize="11" Foreground="{StaticResource AccentBrush}" />
+                                    <TextBlock Text="🔨 Rebuild from Source (PlatformIO)" FontWeight="SemiBold" FontSize="11" Foreground="{DynamicResource AccentBrush}" />
                                 </Button>
                                 <Button Style="{StaticResource ModernAccentButton}" Height="32" Click="SaveConfig_Click">
                                     <TextBlock Text="✓ Apply &amp; Save Config" FontWeight="Bold" FontSize="11" />
@@ -1214,8 +1214,8 @@
 
                 <!-- Export Content Deck -->
                 <Border Grid.Row="1" 
-                        Background="{StaticResource SurfaceBrush}" 
-                        BorderBrush="{StaticResource BorderBrush}" 
+                        Background="{DynamicResource SurfaceBrush}" 
+                        BorderBrush="{DynamicResource BorderBrush}" 
                         BorderThickness="1" 
                         CornerRadius="12" 
                         Padding="18,12">
@@ -1238,14 +1238,14 @@
                             </Grid.ColumnDefinitions>
 
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="Export Format Contract" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+                                <TextBlock Text="Export Format Contract" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
                                 <ComboBox Height="32" SelectedIndex="0">
                                     <ComboBoxItem Content="SOURCETX_MODEL (STXM Magic)" />
                                 </ComboBox>
                             </StackPanel>
 
                             <StackPanel Grid.Column="2" x:Name="ExportSlotPanel">
-                                <TextBlock Text="Source Model Slot (modelnvs @ 0x3D0000)" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+                                <TextBlock Text="Source Model Slot (modelnvs @ 0x3D0000)" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
                                 <ComboBox x:Name="ExportSlotComboBox" Height="32" SelectedIndex="0">
                                     <ComboBoxItem Content="Slot 01: Crawler 4x4 MOA Dual ESC" />
                                     <ComboBoxItem Content="Slot 02: Drift Spec RWD Gyro" />
@@ -1256,7 +1256,7 @@
                             </StackPanel>
 
                             <StackPanel Grid.Column="4">
-                                <TextBlock Text="File Format" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+                                <TextBlock Text="File Format" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
                                 <ComboBox x:Name="ExportFormatComboBox" Height="32" SelectedIndex="0">
                                     <ComboBoxItem Content="SourceTX Model Envelope (.stx)" />
                                     <ComboBoxItem Content="Raw Text Envelope (.txt)" />
@@ -1268,21 +1268,21 @@
                         <Border Grid.Row="1" Background="#141E2B" BorderBrush="#223B59" BorderThickness="1" CornerRadius="6" Padding="10,5" Margin="0,0,0,6">
                             <Grid>
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="Transfer Magic: " FontSize="10.5" Foreground="{StaticResource TextSecondaryBrush}"/>
-                                    <TextBlock Text="STXM (0x5354584D)" FontSize="10.5" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" Margin="0,0,12,0"/>
-                                    <TextBlock Text="Schema: " FontSize="10.5" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <TextBlock Text="Transfer Magic: " FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    <TextBlock Text="STXM (0x5354584D)" FontSize="10.5" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" Margin="0,0,12,0"/>
+                                    <TextBlock Text="Schema: " FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}"/>
                                     <TextBlock Text="v21 Validated" FontSize="10.5" FontWeight="SemiBold" Foreground="#10B981" Margin="0,0,12,0"/>
-                                    <TextBlock Text="Hash: " FontSize="10.5" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <TextBlock Text="Hash: " FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}"/>
                                     <TextBlock Text="FNV-1a Envelope Checksum" FontSize="10.5" FontWeight="SemiBold" Foreground="#10B981"/>
                                 </StackPanel>
-                                <TextBlock Text="SourceTX Transfer Contract" FontSize="10.5" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Right"/>
+                                <TextBlock Text="SourceTX Transfer Contract" FontSize="10.5" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Right"/>
                             </Grid>
                         </Border>
 
                         <!-- SOURCETX_MODEL Preview Box -->
                         <Border Grid.Row="2" 
                                 Background="#0A0C10" 
-                                BorderBrush="{StaticResource BorderBrush}" 
+                                BorderBrush="{DynamicResource BorderBrush}" 
                                 BorderThickness="1" 
                                 CornerRadius="6" 
                                 Padding="8" 
@@ -1301,7 +1301,7 @@
                         <!-- Export Action Button -->
                         <Button Grid.Row="3" 
                                 Style="{StaticResource ModernAccentButton}" 
-                                Background="{StaticResource SuccessBrush}"
+                                Background="{DynamicResource SuccessBrush}"
                                 Height="34" 
                                 HorizontalAlignment="Right" 
                                 Click="ExecuteExport_Click">
@@ -1337,8 +1337,8 @@
 
                 <!-- Import Content Deck -->
                 <Border Grid.Row="1" 
-                        Background="{StaticResource SurfaceBrush}" 
-                        BorderBrush="{StaticResource BorderBrush}" 
+                        Background="{DynamicResource SurfaceBrush}" 
+                        BorderBrush="{DynamicResource BorderBrush}" 
                         BorderThickness="1" 
                         CornerRadius="12" 
                         Padding="18,12">
@@ -1352,7 +1352,7 @@
 
                         <!-- File Picker -->
                         <StackPanel Grid.Row="0" Margin="0,0,0,8">
-                            <TextBlock Text="Select SourceTX Model Backup File (.stx / .txt)" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+                            <TextBlock Text="Select SourceTX Model Backup File (.stx / .txt)" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -1381,7 +1381,7 @@
                             </Grid.ColumnDefinitions>
 
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="Target Destination Slot" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+                                <TextBlock Text="Target Destination Slot" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
                                 <ComboBox x:Name="ImportTargetSlotComboBox" Height="32" SelectedIndex="0">
                                     <ComboBoxItem Content="Slot 01 (Overwrite current model)" />
                                     <ComboBoxItem Content="Slot 02 (Empty)" />
@@ -1394,8 +1394,8 @@
                             <Border Grid.Column="2" Background="#261E14" BorderBrush="#594324" BorderThickness="1" CornerRadius="6" Padding="10,4" VerticalAlignment="Bottom" Height="32">
                                 <Grid VerticalAlignment="Center">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="Validation: " FontSize="10.5" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
-                                        <TextBlock x:Name="ImportValidationTag" Text="STXM Magic • Schema 21 • FNV-1a Checksum OK" FontSize="10.5" FontWeight="Bold" Foreground="{StaticResource WarningBrush}" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Validation: " FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                                        <TextBlock x:Name="ImportValidationTag" Text="STXM Magic • Schema 21 • FNV-1a Checksum OK" FontSize="10.5" FontWeight="Bold" Foreground="{DynamicResource WarningBrush}" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </Grid>
                             </Border>
@@ -1404,7 +1404,7 @@
                         <!-- Validation Inspector Box -->
                         <Border Grid.Row="2" 
                                 Background="#0A0C10" 
-                                BorderBrush="{StaticResource BorderBrush}" 
+                                BorderBrush="{DynamicResource BorderBrush}" 
                                 BorderThickness="1" 
                                 CornerRadius="6" 
                                 Padding="8" 
@@ -1423,7 +1423,7 @@
                         <!-- Import Action Button -->
                         <Button Grid.Row="3" 
                                 Style="{StaticResource ModernAccentButton}" 
-                                Background="{StaticResource WarningBrush}"
+                                Background="{DynamicResource WarningBrush}"
                                 Height="34" 
                                 HorizontalAlignment="Right" 
                                 Click="ExecuteImport_Click">
