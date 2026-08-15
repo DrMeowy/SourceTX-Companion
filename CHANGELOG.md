@@ -1,5 +1,10 @@
 # SourceTX Companion changelog
 
+## 0.1.1 - 2026-08-15
+
+- Fixed factory-image validation rejecting valid ESP-IDF partition tables by
+  checking the little-endian `0x50AA` magic bytes in reverse order.
+
 ## 0.1.0 - 2026-08-15
 
 - Added one-click blank-board provisioning from the public

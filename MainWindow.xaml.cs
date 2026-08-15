@@ -130,7 +130,7 @@ namespace SourceTXCompanion
         public TimeoutWebClient()
         {
             TimeoutMilliseconds = 15000;
-            Headers[HttpRequestHeader.UserAgent] = "SourceTX-Companion/0.1.0";
+            Headers[HttpRequestHeader.UserAgent] = "SourceTX-Companion/0.1.1";
         }
 
         protected override WebRequest GetWebRequest(Uri address)
@@ -188,7 +188,10 @@ namespace SourceTXCompanion
                 }
 
                 // 3. Inspect image structures
-                bool hasPartitionTableAt8000 = (data.Length > 0x8002 && data[0x8000] == 0x50 && data[0x8001] == 0xAA);
+                // ESP-IDF's partition-entry magic is the 16-bit value 0x50AA.
+                // It is stored little-endian in the binary, so the bytes at
+                // 0x8000 must be AA 50 (not 50 AA).
+                bool hasPartitionTableAt8000 = (data.Length >= 0x8002 && data[0x8000] == 0xAA && data[0x8001] == 0x50);
                 bool hasAppDescAt20 = false;
                 bool hasAppDescAt10020 = false;
 
@@ -239,7 +242,7 @@ namespace SourceTXCompanion
                     if (!hasPartitionTableAt8000)
                     {
                         result.IsValid = false;
-                        result.ErrorMessage = "Image does not contain a partition table magic (0xAA50) at offset 0x8000. It cannot be flashed at 0x0000.";
+                        result.ErrorMessage = "Image does not contain the ESP-IDF partition table magic 0x50AA (bytes AA 50) at offset 0x8000. It cannot be flashed at 0x0000.";
                         return result;
                     }
                 }
@@ -920,7 +923,7 @@ namespace SourceTXCompanion
         {
             HideAllViews();
             HomeView.Visibility = Visibility.Visible;
-            StatusBarText.Text = "Ready • SourceTX Companion v0.1.0";
+            StatusBarText.Text = "Ready • SourceTX Companion v0.1.1";
         }
 
         private void NavToInstall_Click(object sender, RoutedEventArgs e)
@@ -2394,7 +2397,7 @@ namespace SourceTXCompanion
 
         public static class UpdateChecker
         {
-            public const string CURRENT_VERSION = "0.1.0";
+            public const string CURRENT_VERSION = "0.1.1";
             private const string GITHUB_RELEASES_API = "https://api.github.com/repos/DrMeowy/SourceTX-Companion/releases/latest";
             private const string GITHUB_TARGETS_URL = "https://raw.githubusercontent.com/DrMeowy/SourceTX-Companion/main/targets.json";
             private const string GITHUB_RELEASES_PAGE = "https://github.com/DrMeowy/SourceTX-Companion/releases";
@@ -2425,7 +2428,7 @@ namespace SourceTXCompanion
                         try
                         {
                             var req = (System.Net.HttpWebRequest)System.Net.WebRequest.Create(GITHUB_RELEASES_API);
-                            req.UserAgent = "SourceTXCompanion-UpdateChecker/0.1.0";
+                            req.UserAgent = "SourceTXCompanion-UpdateChecker/0.1.1";
                             req.Timeout = 5000;
                             req.Accept = "application/vnd.github.v3+json";
 
@@ -2453,7 +2456,7 @@ namespace SourceTXCompanion
                         if (string.IsNullOrEmpty(latestVer))
                         {
                             var req = (System.Net.HttpWebRequest)System.Net.WebRequest.Create(GITHUB_TARGETS_URL);
-                            req.UserAgent = "SourceTXCompanion-UpdateChecker/0.1.0";
+                            req.UserAgent = "SourceTXCompanion-UpdateChecker/0.1.1";
                             req.Timeout = 5000;
 
                             using (var resp = (System.Net.HttpWebResponse)req.GetResponse())
@@ -2587,7 +2590,7 @@ namespace SourceTXCompanion
             }
             finally
             {
-                StatusBarText.Text = "Ready • SourceTX Companion v0.1.0";
+                StatusBarText.Text = "Ready • SourceTX Companion v0.1.1";
                 if (btn != null) btn.IsEnabled = true;
             }
         }
