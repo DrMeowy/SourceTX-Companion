@@ -69,6 +69,11 @@
         <SolidColorBrush x:Key="StatusBtnBorderBrush" Color="#253147" />
         <SolidColorBrush x:Key="StatusBtnTextBrush" Color="#E2E8F0" />
 
+        <SolidColorBrush x:Key="DangerBrush" Color="#EF4444" />
+        <SolidColorBrush x:Key="BugBtnBgBrush" Color="#2A1417" />
+        <SolidColorBrush x:Key="BugBtnBorderBrush" Color="#5A2229" />
+        <SolidColorBrush x:Key="BugBtnHoverBgBrush" Color="#3D181F" />
+
         <!-- Base Text Block Style -->
         <Style TargetType="TextBlock">
             <Setter Property="FontFamily" Value="Segoe UI, -apple-system, BlinkMacSystemFont, Roboto, sans-serif" />
@@ -214,13 +219,13 @@
             </Setter>
         </Style>
 
-        <!-- Small Status Bar Button Style -->
+        <!-- Small Status Bar Bug Button Style (Red Accent) -->
         <Style x:Key="SmallBugButton" TargetType="Button">
-            <Setter Property="Background" Value="{DynamicResource StatusBtnBgBrush}" />
-            <Setter Property="Foreground" Value="{DynamicResource StatusBtnTextBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource StatusBtnBorderBrush}" />
+            <Setter Property="Background" Value="{DynamicResource BugBtnBgBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BugBtnBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="FontWeight" Value="Medium" />
+            <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="FontSize" Value="11" />
             <Setter Property="Padding" Value="9,4" />
             <Setter Property="Cursor" Value="Hand" />
@@ -237,11 +242,11 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="BtnBorder" Property="Background" Value="{DynamicResource SurfaceElevatedBrush}" />
-                                <Setter TargetName="BtnBorder" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                                <Setter TargetName="BtnBorder" Property="Background" Value="{DynamicResource BugBtnHoverBgBrush}" />
+                                <Setter TargetName="BtnBorder" Property="BorderBrush" Value="{DynamicResource DangerBrush}" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="BtnBorder" Property="Background" Value="{DynamicResource SurfaceBrush}" />
+                                <Setter TargetName="BtnBorder" Property="Opacity" Value="0.8" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>

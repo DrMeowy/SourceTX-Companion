@@ -1969,6 +1969,11 @@ namespace SourceTXCompanion
                 SetBrushColor("StatusBtnBorderBrush", Color.FromRgb(0x25, 0x31, 0x47));
                 SetBrushColor("StatusBtnTextBrush", Color.FromRgb(0xE2, 0xE8, 0xF0));
 
+                SetBrushColor("DangerBrush", Color.FromRgb(0xEF, 0x44, 0x44)); // Red 500
+                SetBrushColor("BugBtnBgBrush", Color.FromRgb(0x2A, 0x14, 0x17));
+                SetBrushColor("BugBtnBorderBrush", Color.FromRgb(0x5A, 0x22, 0x29));
+                SetBrushColor("BugBtnHoverBgBrush", Color.FromRgb(0x3D, 0x18, 0x1F));
+
                 if (ThemeToggleText != null) ThemeToggleText.Text = "Theme: 🌙 Dark";
             }
             else
@@ -2018,6 +2023,11 @@ namespace SourceTXCompanion
                 SetBrushColor("StatusBtnBgBrush", Color.FromRgb(0xF1, 0xF5, 0xF9));
                 SetBrushColor("StatusBtnBorderBrush", Color.FromRgb(0xCB, 0xD5, 0xE1));
                 SetBrushColor("StatusBtnTextBrush", Color.FromRgb(0x1E, 0x29, 0x3B));
+
+                SetBrushColor("DangerBrush", Color.FromRgb(0xDC, 0x26, 0x26)); // Red 600
+                SetBrushColor("BugBtnBgBrush", Color.FromRgb(0xFE, 0xF2, 0xF2)); // Red 50
+                SetBrushColor("BugBtnBorderBrush", Color.FromRgb(0xFE, 0xCA, 0xCA)); // Red 200
+                SetBrushColor("BugBtnHoverBgBrush", Color.FromRgb(0xFE, 0xE2, 0xE2)); // Red 100
 
                 if (ThemeToggleText != null) ThemeToggleText.Text = "Theme: ☀️ Light";
             }
