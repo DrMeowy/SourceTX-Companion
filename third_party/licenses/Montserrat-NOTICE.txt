@@ -1,0 +1,10 @@
+Montserrat font notice
+
+Copyright 2011 The Montserrat Project Authors
+(https://github.com/JulietaUla/Montserrat)
+
+SourceTX uses generated Montserrat Medium glyph data supplied with the pinned
+LVGL 9.5.0 source package and an eight-glyph SourceTX logo subset. Montserrat is
+licensed under the SIL Open Font License, Version 1.1. The complete license is
+included in OFL-1.1.txt.
+

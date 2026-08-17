@@ -1,0 +1,14 @@
+Font Awesome Free 5 webfont notice
+
+Copyright (c) 2022 Fonticons, Inc. (https://fontawesome.com)
+Reserved Font Name: "Font Awesome"
+
+The generated LVGL Montserrat fonts in SourceTX include selected glyphs from
+the `FontAwesome5-Solid+Brands+Regular.woff` webfont distributed with LVGL
+9.5.0. Font Awesome webfont files are licensed under the SIL Open Font License,
+Version 1.1. The complete license is included in OFL-1.1.txt.
+
+SourceTX does not embed Font Awesome SVG or JavaScript icon packages through
+these generated font files; the Creative Commons license applying to those
+separate formats is therefore not the license for this embedded webfont subset.
+

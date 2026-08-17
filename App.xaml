@@ -50,10 +50,10 @@
         <SolidColorBrush x:Key="CardUpdateAccentBrush" Color="#00D2FF" />
         <SolidColorBrush x:Key="CardUpdatePillBrush" Color="#1A2736" />
 
-        <SolidColorBrush x:Key="CardConfigBgBrush" Color="#1D1F38" />
-        <SolidColorBrush x:Key="CardConfigBorderBrush" Color="#343864" />
-        <SolidColorBrush x:Key="CardConfigAccentBrush" Color="#818CF8" />
-        <SolidColorBrush x:Key="CardConfigPillBrush" Color="#22233D" />
+        <SolidColorBrush x:Key="CardConfigBgBrush" Color="#261D15" />
+        <SolidColorBrush x:Key="CardConfigBorderBrush" Color="#4C3018" />
+        <SolidColorBrush x:Key="CardConfigAccentBrush" Color="#FB923C" />
+        <SolidColorBrush x:Key="CardConfigPillBrush" Color="#332316" />
 
         <SolidColorBrush x:Key="CardExportBgBrush" Color="#1A2F25" />
         <SolidColorBrush x:Key="CardExportBorderBrush" Color="#2A5440" />
@@ -203,6 +203,10 @@
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
                                 <Setter TargetName="CardBorder" Property="Opacity" Value="0.85" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="CardBorder" Property="Opacity" Value="0.68" />
+                                <Setter Property="Cursor" Value="Arrow" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>

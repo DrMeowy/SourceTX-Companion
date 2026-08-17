@@ -2,6 +2,35 @@
 
 Public Windows installer and maintenance application for SourceTX transmitters.
 
+The main screen provides four supported actions:
+
+- **Install SourceTX** on a blank or freshly erased supported board;
+- **Update or Repair** an existing transmitter while keeping compatible saved
+  data during a regular update;
+- **Back Up Models** from the transmitter;
+- **Restore Models** from a verified SourceTX backup.
+
+The home screen also shows **Configure Transmitter** as a locked **In
+Development** preview. It intentionally opens no placeholder settings screen;
+the card will only be enabled when live USB configuration is implemented and
+verified in both Companion and SourceTX firmware.
+
+## What users need
+
+- a 64-bit Windows 10 or Windows 11 PC with .NET Framework 4.8;
+- a USB data cable (a charge-only cable will not work); and
+- the supported SourceTX ESP32-S3 reference transmitter or a blank supported
+  board for a new installation.
+
+PlatformIO, Python, source code, and command-line tools are not required. Keep
+the entire Companion release folder together when moving or extracting it.
+
+Install and Update use the Stable channel by default. The Experimental channel
+is displayed as unavailable until a separately tested and signed feed exists.
+Low-level flashing offsets, arbitrary firmware selection, source compilation,
+and placeholder radio-configuration controls are intentionally not exposed in
+the end-user interface.
+
 ## Signed factory installation
 
 The Install screen provisions a blank supported ESP32-S3 from the public
@@ -28,8 +57,33 @@ quad PSRAM, ST7796U 480x320 display and FT6x36 touch controller. Development
 profiles remain disabled until they have their own builds and signed factory
 contracts.
 
+## Model backup and restore
+
+Open **Settings → Transmitter → Model Transfer** on the transmitter before
+starting a transfer in Companion. Companion can export or restore the active
+model as a validated `SOURCETX_MODEL:` envelope (`.stx` or `.txt`). This path
+also supports older firmware: use the on-radio Export or Import action when
+Companion prompts for it.
+
+Current SourceTX firmware additionally supports:
+
+- acknowledged direct restore to an existing slot or the next new slot;
+- **Export Everything**, which saves every configured model as one `.stxb`
+  bundle;
+- complete-bundle restore, with schema, payload, FNV-1a, and SHA-256 checks
+  before model data is accepted.
+
+A complete restore overwrites the bundled slots and restores the saved logical
+model count. It intentionally keeps whichever slot is currently active on the
+transmitter; the bundle records the original active slot for reference.
+
 ## Build
 
-Run `build.bat` or `build.ps1`. Release output is written to `bin/Release` and
-must be distributed with `targets.json`, `firmware/`, `tools/`, `LICENSE`, and
-the third-party notices required by the bundled components.
+Install the **.NET Framework 4.8 Developer Pack** before building. The normal
+.NET runtime is enough to run Companion, but it does not include the reference
+assemblies required for a clean developer build.
+
+Run `build.bat` or `build.ps1`. The script starts with a clean output directory
+and writes the complete distribution to `bin/Release`. Distribute that folder
+as one unit; it includes the firmware, flashing tool, project license, and all
+required third-party notices.

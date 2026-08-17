@@ -595,7 +595,6 @@ namespace SourceTXCompanion
 
         private bool _isFlashing = false;
         private bool _isInstalling = false;
-        private bool _isBuilding = false;
         private bool _isSyncingSelectors = false;
 
         private List<SerialDeviceInfo> _detectedDevices = new List<SerialDeviceInfo>();
@@ -876,17 +875,8 @@ namespace SourceTXCompanion
 
             if (InstallPinoutBlock != null)
             {
-                InstallPinoutBlock.Text = string.Format("Pinout: Steering GPIO 6, Throttle GPIO 5 | CRSF GPIO 42 (Single-Wire) | {0}", display.Pins);
-            }
-
-            if (InstallNvsLabel != null)
-            {
-                InstallNvsLabel.Text = string.Format("NVS model catalog ({0}) provisioned automatically on boot", board.PartitionNvs);
-            }
-
-            if (StatusHardwareTag != null)
-            {
-                StatusHardwareTag.Text = string.Format("{0} • {1} • {2} • {3}", board.Chip.ToUpper(), board.FlashSize, board.Psram, display.Driver);
+                InstallPinoutBlock.Text =
+                    "The board, flash memory, display, and touch controller are checked before installation.";
             }
 
             if (InstallTargetStatusBadge != null && InstallTargetStatusText != null)
@@ -894,7 +884,7 @@ namespace SourceTXCompanion
                 if (IsTrustedFactoryTarget(board) && IsTrustedFactoryDisplay(display))
                 {
                     InstallTargetStatusBadge.Background = new SolidColorBrush(Color.FromRgb(0x1B, 0x33, 0x24));
-                    InstallTargetStatusText.Text = "Target Verified";
+                    InstallTargetStatusText.Text = "Supported";
                     InstallTargetStatusText.Foreground = (Brush)FindResource("SuccessBrush");
                 }
                 else
@@ -974,7 +964,9 @@ namespace SourceTXCompanion
         {
             HideAllViews();
             ConfigView.Visibility = Visibility.Visible;
-            StatusBarText.Text = "Mode: Hardware Pin Mapping & Surface Configurator";
+            StatusBarText.Text = "Configure transmitter hardware pins • NVS";
+            AutoDetectSerialPorts(false);
+            PopulatePinComboBoxes();
         }
 
         private void NavToExport_Click(object sender, RoutedEventArgs e)
@@ -1011,6 +1003,9 @@ namespace SourceTXCompanion
 
             PortComboBox.Items.Clear();
             if (InstallPortComboBox != null) InstallPortComboBox.Items.Clear();
+            if (ExportPortComboBox != null) ExportPortComboBox.Items.Clear();
+            if (ImportPortComboBox != null) ImportPortComboBox.Items.Clear();
+            if (ConfigPortComboBox != null) ConfigPortComboBox.Items.Clear();
 
             if (_detectedDevices.Count > 0)
             {
@@ -1018,10 +1013,16 @@ namespace SourceTXCompanion
                 {
                     PortComboBox.Items.Add(dev);
                     if (InstallPortComboBox != null) InstallPortComboBox.Items.Add(dev);
+                    if (ExportPortComboBox != null) ExportPortComboBox.Items.Add(dev);
+                    if (ImportPortComboBox != null) ImportPortComboBox.Items.Add(dev);
+                    if (ConfigPortComboBox != null) ConfigPortComboBox.Items.Add(dev);
                 }
 
                 PortComboBox.SelectedIndex = 0;
                 if (InstallPortComboBox != null) InstallPortComboBox.SelectedIndex = 0;
+                if (ExportPortComboBox != null) ExportPortComboBox.SelectedIndex = 0;
+                if (ImportPortComboBox != null) ImportPortComboBox.SelectedIndex = 0;
+                if (ConfigPortComboBox != null) ConfigPortComboBox.SelectedIndex = 0;
 
                 var best = _detectedDevices[0];
                 if (best.IsEspressif)
@@ -1544,18 +1545,6 @@ namespace SourceTXCompanion
                 return;
             }
             string factoryBinary = factoryPackage.ImagePath;
-            if (factoryPackage.Manifest != null)
-            {
-                InstallPackagePathBox.Text = string.Format(
-                    "SourceTX v{0} signed factory release ({1})",
-                    factoryPackage.Manifest.Version,
-                    Path.GetFileName(factoryBinary));
-            }
-            else
-            {
-                InstallPackagePathBox.Text = string.Format(
-                    "Offline fallback: {0}", Path.GetFileName(factoryBinary));
-            }
 
             // Validate Factory Firmware Binary Structure and SHA-256
             var validation = FirmwareValidator.ValidateFirmwareImage(factoryBinary, "0x0000");
@@ -1571,17 +1560,6 @@ namespace SourceTXCompanion
             InstallStatusText.Text = "Step 1/3: Running strict preflight chip & flash identification...";
 
             string baud = "115200";
-            if (InstallBaudComboBox != null && InstallBaudComboBox.SelectedItem != null)
-            {
-                var item = (ComboBoxItem)InstallBaudComboBox.SelectedItem;
-                if (item.Content != null)
-                {
-                    string text = item.Content.ToString();
-                    if (text.Contains("921600")) baud = "921600";
-                    else if (text.Contains("460800")) baud = "460800";
-                    else if (text.Contains("115200")) baud = "115200";
-                }
-            }
 
             AppendInstallLog("==================================================");
             AppendInstallLog(string.Format("[SOURCE] Using {0}.", factoryPackage.SourceDescription));
@@ -1697,6 +1675,17 @@ namespace SourceTXCompanion
                 InstallStatusText.Text = "Factory installation completed successfully! Transmitter rebooted.";
                 AppendInstallLog("==================================================");
                 AppendInstallLog(string.Format("[SUCCESS] SourceTX installation complete! NVS partition ({0}) will initialize on boot.", board.PartitionNvs));
+
+                var prompt = MessageBox.Show(
+                    "SourceTX was installed successfully!\n\nWould you like to configure your transmitter hardware pins now?",
+                    "Installation Complete",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Information);
+
+                if (prompt == MessageBoxResult.Yes)
+                {
+                    NavToConfig_Click(null, null);
+                }
             }
             else
             {
@@ -1717,128 +1706,7 @@ namespace SourceTXCompanion
 
         #endregion
 
-        #region Firmware Flasher / Recovery & Integrated Compiler
-
-        private void FlashMode_Changed(object sender, SelectionChangedEventArgs e)
-        {
-            if (FirmwarePathBox == null || FlashModeComboBox == null) return;
-
-            if (FlashModeComboBox.SelectedIndex == 1) // App Firmware
-            {
-                FirmwarePathBox.Text = "SourceTX_ESP32S3_SuperMini_App.bin (App Firmware @ 0x10000)";
-            }
-            else // Full Factory Image (Default & Recommended)
-            {
-                FirmwarePathBox.Text = "SourceTX_ESP32S3_SuperMini_Factory.bin (Full Image @ 0x0000)";
-            }
-        }
-
-        private void BrowseFirmware_Click(object sender, RoutedEventArgs e)
-        {
-            var dialog = new OpenFileDialog
-            {
-                Filter = "Firmware Binary (*.bin)|*.bin|All Files (*.*)|*.*",
-                Title = "Select SourceTX ESP32-S3 Firmware Binary"
-            };
-
-            if (dialog.ShowDialog() == true)
-            {
-                string offset = (FlashModeComboBox.SelectedIndex == 0) ? "0x0000" : "0x10000";
-                var validation = FirmwareValidator.ValidateFirmwareImage(dialog.FileName, offset);
-
-                if (validation.IsValid)
-                {
-                    FirmwarePathBox.Text = dialog.FileName;
-                    AppendFlashLog(string.Format("[INFO] Validated firmware: {0} ({1})", Path.GetFileName(dialog.FileName), validation.ImageType));
-                    AppendFlashLog(string.Format("[INFO] SHA-256: {0}", validation.Sha256Hash));
-                }
-                else
-                {
-                    MessageBox.Show(string.Format("Firmware verification warning:\n\n{0}", validation.ErrorMessage), "Firmware Verification", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    FirmwarePathBox.Text = dialog.FileName;
-                }
-            }
-        }
-
-        private async void RebuildFirmware_Click(object sender, RoutedEventArgs e)
-        {
-            if (_isBuilding) return;
-
-            string pioPath = FindPlatformIoPath();
-            string transmitterDir = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\Transmitter"));
-            if (!Directory.Exists(transmitterDir))
-            {
-                transmitterDir = @"C:\Users\Loli\Documents\PlatformIO\Projects\Transmitter";
-            }
-
-            if (!Directory.Exists(transmitterDir) || !File.Exists(pioPath))
-            {
-                MessageBox.Show(
-                    "Rebuilding from source requires the SourceTX source code repository and PlatformIO CLI.\n\nFor regular transmitter updates and factory installations, use the bundled v1.98 firmware binaries provided in the app.", 
-                    "SourceTX Developer Mode", 
-                    MessageBoxButton.OK, 
-                    MessageBoxImage.Information);
-                return;
-            }
-
-            _isBuilding = true;
-            FlashStatusText.Text = "Compiling SourceTX firmware from source via PlatformIO...";
-            FlashProgressBar.Value = 20;
-            FlashPercentText.Text = "Building...";
-
-            AppendFlashLog("==================================================");
-            AppendFlashLog("[BUILD] Starting PlatformIO compilation (env: esp32s3_supermini_ota)...");
-
-            string pioArgs = string.Format("run -d \"{0}\" -e esp32s3_supermini_ota", transmitterDir);
-            bool buildSuccess = await RunProcessAsync(pioPath, pioArgs, (line) =>
-            {
-                AppendFlashLog(line);
-                if (line.Contains("[SUCCESS]"))
-                {
-                    FlashProgressBar.Value = 80;
-                }
-            }, transmitterDir);
-
-            if (buildSuccess)
-            {
-                FlashProgressBar.Value = 100;
-                FlashPercentText.Text = "Done";
-                FlashStatusText.Text = "Build Succeeded! Firmware binaries updated.";
-                AppendFlashLog("[BUILD] Copying compiled binaries into Companion firmware repository...");
-
-                try
-                {
-                    string outDir = Path.Combine(transmitterDir, @".pio\build\esp32s3_supermini_ota");
-                    string appBin = Path.Combine(outDir, "firmware.bin");
-                    string factoryBin = Path.Combine(outDir, "firmware.factory.bin");
-
-                    string targetApp = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"firmware\SourceTX_ESP32S3_SuperMini_App.bin");
-                    string targetFactory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"firmware\SourceTX_ESP32S3_SuperMini_Factory.bin");
-
-                    if (File.Exists(appBin)) File.Copy(appBin, targetApp, true);
-                    if (File.Exists(factoryBin))
-                    {
-                        File.Copy(factoryBin, targetFactory, true);
-                        FirmwarePathBox.Text = targetFactory;
-                    }
-                    AppendFlashLog("[BUILD] Successfully deployed updated firmware artifacts.");
-                }
-                catch (Exception ex)
-                {
-                    AppendFlashLog(string.Format("[WARN] Artifact copy notice: {0}", ex.Message));
-                }
-
-                MessageBox.Show("Firmware build completed successfully!\n\nThe updated binary has been deployed and selected in the flasher.", "Build Succeeded", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-            else
-            {
-                FlashStatusText.Text = "Build failed. Review console logs above.";
-                AppendFlashLog("[ERROR] PlatformIO compilation encountered errors.");
-                MessageBox.Show("Firmware build failed. Please review the console output for compiler diagnostics.", "Build Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-
-            _isBuilding = false;
-        }
+        #region Firmware Flasher / Recovery
 
         private async void StartFlash_Click(object sender, RoutedEventArgs e)
         {
@@ -1854,7 +1722,7 @@ namespace SourceTXCompanion
             string selectedPort = ExtractCleanPort(PortComboBox.SelectedItem);
             if (string.IsNullOrEmpty(selectedPort))
             {
-                MessageBox.Show("No active COM port selected. Please connect your transmitter and click '⚡ Auto-Detect'.", "No Port Selected", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("No active COM port selected. Please connect your transmitter and click 'Find Transmitter'.", "No Port Selected", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -1865,14 +1733,9 @@ namespace SourceTXCompanion
                 return;
             }
 
-            bool isFactoryMode = (FlashModeComboBox.SelectedIndex == 0);
-            string offset = isFactoryMode ? "0x0000" : "0x10000";
-            string targetFile = isFactoryMode ? FindBinaryPath("SourceTX_ESP32S3_SuperMini_Factory.bin") : FindBinaryPath("SourceTX_ESP32S3_SuperMini_App.bin");
-
-            if (FirmwarePathBox.Text.EndsWith(".bin", StringComparison.OrdinalIgnoreCase) && File.Exists(FirmwarePathBox.Text))
-            {
-                targetFile = FirmwarePathBox.Text;
-            }
+            bool isRecoveryMode = (FlashModeComboBox != null && FlashModeComboBox.SelectedIndex == 1);
+            string offset = isRecoveryMode ? "0x0000" : "0x10000";
+            string targetFile = isRecoveryMode ? FindBinaryPath("SourceTX_ESP32S3_SuperMini_Factory.bin") : FindBinaryPath("SourceTX_ESP32S3_SuperMini_App.bin");
 
             if (!File.Exists(targetFile))
             {
@@ -1895,17 +1758,6 @@ namespace SourceTXCompanion
             FlashStatusText.Text = string.Format("Flashing verified firmware to {0} (offset {1}, {2})...", selectedPort, offset, board.FlashSize);
 
             string baud = "115200";
-            if (BaudComboBox != null && BaudComboBox.SelectedItem != null)
-            {
-                var item = (ComboBoxItem)BaudComboBox.SelectedItem;
-                if (item.Content != null)
-                {
-                    string text = item.Content.ToString();
-                    if (text.Contains("921600")) baud = "921600";
-                    else if (text.Contains("460800")) baud = "460800";
-                    else if (text.Contains("115200")) baud = "115200";
-                }
-            }
 
             AppendFlashLog("==================================================");
             AppendFlashLog(string.Format("[FLASH] Verified Image: {0} ({1:N0} bytes @ {2})", Path.GetFileName(targetFile), validation.FileSizeBytes, offset));
@@ -1933,6 +1785,17 @@ namespace SourceTXCompanion
                 FlashStatusText.Text = "Flash completed successfully! Transmitter rebooted.";
                 AppendFlashLog("==================================================");
                 AppendFlashLog("[SUCCESS] SourceTX firmware updated successfully.");
+
+                var prompt = MessageBox.Show(
+                    "SourceTX firmware was updated successfully!\n\nYour compatible saved models and settings remain available.\n\nWould you like to review or configure hardware pins now?",
+                    "Update Complete",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Information);
+
+                if (prompt == MessageBoxResult.Yes)
+                {
+                    NavToConfig_Click(null, null);
+                }
             }
             else
             {
@@ -1949,6 +1812,8 @@ namespace SourceTXCompanion
             ConsoleLogBlock.Text += "\n" + message;
             if (FlashLogScroll != null) FlashLogScroll.ScrollToEnd();
         }
+
+        #endregion
 
         private async Task<bool> RunProcessAsync(string exePath, string arguments, Action<string> onOutputLine, string workingDir = null, Dictionary<string, string> envVars = null)
         {
@@ -2036,269 +1901,6 @@ namespace SourceTXCompanion
             }
             return -1;
         }
-
-        #endregion
-
-        #region Config Logic & Hardware Pin Mapping
-
-        private void TabPinMap_Click(object sender, RoutedEventArgs e)
-        {
-            SetTabActive(TabPinMapBtn, PanelPinMapTab);
-        }
-
-        private void TabChannels_Click(object sender, RoutedEventArgs e)
-        {
-            SetTabActive(TabChannelsBtn, PanelChannelsTab);
-        }
-
-        private void TabSubsystems_Click(object sender, RoutedEventArgs e)
-        {
-            SetTabActive(TabSubsystemsBtn, PanelSubsystemsTab);
-        }
-
-        private void TabCrsf_Click(object sender, RoutedEventArgs e)
-        {
-            SetTabActive(TabCrsfBtn, PanelCrsfTab);
-        }
-
-        private void TabHardware_Click(object sender, RoutedEventArgs e)
-        {
-            SetTabActive(TabHardwareBtn, PanelHardwareTab);
-        }
-
-        private void SetTabActive(Button activeButton, ScrollViewer activePanel)
-        {
-            if (TabPinMapBtn != null) TabPinMapBtn.Style = (Style)FindResource("ModernOutlineButton");
-            TabChannelsBtn.Style = (Style)FindResource("ModernOutlineButton");
-            TabSubsystemsBtn.Style = (Style)FindResource("ModernOutlineButton");
-            TabCrsfBtn.Style = (Style)FindResource("ModernOutlineButton");
-            TabHardwareBtn.Style = (Style)FindResource("ModernOutlineButton");
-
-            activeButton.Style = (Style)FindResource("ModernAccentButton");
-
-            if (PanelPinMapTab != null) PanelPinMapTab.Visibility = Visibility.Collapsed;
-            PanelChannelsTab.Visibility = Visibility.Collapsed;
-            PanelSubsystemsTab.Visibility = Visibility.Collapsed;
-            PanelCrsfTab.Visibility = Visibility.Collapsed;
-            PanelHardwareTab.Visibility = Visibility.Collapsed;
-
-            activePanel.Visibility = Visibility.Visible;
-        }
-
-        private void PinSelection_Changed(object sender, SelectionChangedEventArgs e)
-        {
-            if (PinSteeringBox == null || PinThrottleBox == null || PinValidationBadge == null) return;
-
-            if (PinSteeringBox.SelectedIndex == PinThrottleBox.SelectedIndex)
-            {
-                PinValidationBadge.Text = "⚠ Conflict: Steering and Throttle share the same ADC pin!";
-                PinValidationBadge.Foreground = (Brush)FindResource("WarningBrush");
-            }
-            else
-            {
-                PinValidationBadge.Text = "✓ Valid Hardware Reference Pinout (ESP32-S3-FH4R2)";
-                PinValidationBadge.Foreground = (Brush)FindResource("SuccessBrush");
-            }
-        }
-
-        private void SaveConfig_Click(object sender, RoutedEventArgs e)
-        {
-            MessageBox.Show(
-                "Hardware pinout and settings verified!\n\nNote: SourceTX supports dynamic input discovery and channel remapping directly on the radio. Default reference pins are: Steering (GPIO 6), Throttle (GPIO 5), CRSF (GPIO 42).", 
-                "SourceTX Hardware Config", 
-                MessageBoxButton.OK, 
-                MessageBoxImage.Information);
-        }
-
-        #endregion
-
-        #region SOURCETX_MODEL Model Transfer (STXM Magic + Schema 21 + FNV-1a Checksum)
-
-        private uint CalculateFnv1aChecksum(byte[] payload, uint magic, ushort version, ushort payloadSize)
-        {
-            uint hash = 2166136261U;
-            for (int i = 0; i < payload.Length; i++)
-            {
-                hash ^= payload[i];
-                hash *= 16777619U;
-            }
-            hash ^= magic;
-            hash *= 16777619U;
-            hash ^= ((uint)version << 16) | payloadSize;
-            return hash;
-        }
-
-        private void ExecuteExport_Click(object sender, RoutedEventArgs e)
-        {
-            var dialog = new SaveFileDialog
-            {
-                Filter = "SourceTX Model (*.stx)|*.stx|Text Envelope (*.txt)|*.txt|All Files (*.*)|*.*",
-                FileName = "Crawler_4x4_MOA_Model01.stx",
-                Title = "Export SourceTX Model Backup (SOURCETX_MODEL)"
-            };
-
-            if (dialog.ShowDialog() == true)
-            {
-                // Generate a real binary ModelConfig structure matching Schema Version 21 (approx 1380 bytes)
-                byte[] binaryPayload = new byte[1380];
-                string modelName = "Crawler 4x4 MOA";
-                byte[] nameBytes = Encoding.ASCII.GetBytes(modelName);
-                Array.Copy(nameBytes, 0, binaryPayload, 0, Math.Min(nameBytes.Length, 15));
-
-                string desc = "Surface Crawler Dual ESC";
-                byte[] descBytes = Encoding.ASCII.GetBytes(desc);
-                // vehicleDescription offset in ModelConfig
-                if (binaryPayload.Length > 200)
-                {
-                    Array.Copy(descBytes, 0, binaryPayload, 120, Math.Min(descBytes.Length, 31));
-                }
-
-                ushort payloadSize = (ushort)binaryPayload.Length;
-                uint checksum = CalculateFnv1aChecksum(binaryPayload, TRANSFER_MAGIC, TRANSFER_SCHEMA_VERSION, payloadSize);
-
-                // Construct binary envelope: magic (4), version (2), payloadSize (2), payload (N), checksum (4)
-                byte[] envelopeBytes = new byte[8 + payloadSize + 4];
-                Array.Copy(BitConverter.GetBytes(TRANSFER_MAGIC), 0, envelopeBytes, 0, 4);
-                Array.Copy(BitConverter.GetBytes(TRANSFER_SCHEMA_VERSION), 0, envelopeBytes, 4, 2);
-                Array.Copy(BitConverter.GetBytes(payloadSize), 0, envelopeBytes, 6, 2);
-                Array.Copy(binaryPayload, 0, envelopeBytes, 8, payloadSize);
-                Array.Copy(BitConverter.GetBytes(checksum), 0, envelopeBytes, 8 + payloadSize, 4);
-
-                var sb = new StringBuilder();
-                sb.Append(TRANSFER_PREFIX);
-                foreach (byte b in envelopeBytes)
-                {
-                    sb.Append(b.ToString("X2"));
-                }
-
-                string envelopeText = sb.ToString();
-                File.WriteAllText(dialog.FileName, envelopeText);
-                ExportPreviewBlock.Text = envelopeText.Substring(0, Math.Min(120, envelopeText.Length)) + "...";
-
-                MessageBox.Show(string.Format("Model envelope successfully generated and saved to:\n{0}\n\nHeader: STXM (0x5354584D)\nSchema: v{1}\nPayload Size: {2} bytes\nChecksum: 0x{3:X8}", 
-                    dialog.FileName, TRANSFER_SCHEMA_VERSION, payloadSize, checksum), "Export Successful", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-        }
-
-        private void BrowseImport_Click(object sender, RoutedEventArgs e)
-        {
-            var dialog = new OpenFileDialog
-            {
-                Filter = "SourceTX Model Backups (*.stx;*.txt)|*.stx;*.txt|All Files (*.*)|*.*",
-                Title = "Select SOURCETX_MODEL Backup File to Restore"
-            };
-
-            if (dialog.ShowDialog() == true)
-            {
-                ImportPathBox.Text = dialog.FileName;
-                string content = File.ReadAllText(dialog.FileName).Trim();
-
-                if (!content.StartsWith(TRANSFER_PREFIX, StringComparison.OrdinalIgnoreCase))
-                {
-                    ImportLogBlock.Text = string.Format(
-                        "[VALIDATOR] Loaded file: {0}\n[ERROR] Missing 'SOURCETX_MODEL:' ASCII prefix header.\n[ERROR] File rejected by ModelTransfer contract.",
-                        dialog.SafeFileName);
-                    ImportValidationTag.Text = "Invalid File Header";
-                    ImportValidationTag.Foreground = (Brush)FindResource("DangerBrush");
-                    return;
-                }
-
-                string hexData = content.Substring(TRANSFER_PREFIX.Length).Trim();
-                if (hexData.Length % 2 != 0 || !Regex.IsMatch(hexData, @"^[0-9A-Fa-f]+$"))
-                {
-                    ImportLogBlock.Text = string.Format(
-                        "[VALIDATOR] Loaded file: {0}\n[ERROR] Envelope contains invalid non-hex characters or odd length ({1} chars).",
-                        dialog.SafeFileName, hexData.Length);
-                    ImportValidationTag.Text = "Corrupt Hex Payload";
-                    ImportValidationTag.Foreground = (Brush)FindResource("DangerBrush");
-                    return;
-                }
-
-                byte[] envelopeBytes = new byte[hexData.Length / 2];
-                for (int i = 0; i < envelopeBytes.Length; i++)
-                {
-                    envelopeBytes[i] = Convert.ToByte(hexData.Substring(i * 2, 2), 16);
-                }
-
-                if (envelopeBytes.Length < 12)
-                {
-                    ImportLogBlock.Text = string.Format("[VALIDATOR] File rejected: Envelope size too short ({0} bytes).", envelopeBytes.Length);
-                    ImportValidationTag.Text = "Payload Truncated";
-                    ImportValidationTag.Foreground = (Brush)FindResource("DangerBrush");
-                    return;
-                }
-
-                uint magic = BitConverter.ToUInt32(envelopeBytes, 0);
-                ushort version = BitConverter.ToUInt16(envelopeBytes, 4);
-                ushort payloadSize = BitConverter.ToUInt16(envelopeBytes, 6);
-
-                if (magic != TRANSFER_MAGIC)
-                {
-                    ImportLogBlock.Text = string.Format(
-                        "[VALIDATOR] Magic Header Mismatch: 0x{0:X8} (Expected 0x{1:X8} 'STXM').", magic, TRANSFER_MAGIC);
-                    ImportValidationTag.Text = "Invalid Magic Header";
-                    ImportValidationTag.Foreground = (Brush)FindResource("DangerBrush");
-                    return;
-                }
-
-                if (version != TRANSFER_SCHEMA_VERSION)
-                {
-                    ImportLogBlock.Text = string.Format(
-                        "[VALIDATOR] Schema Version Incompatible: v{0} (Expected Schema v{1}).", version, TRANSFER_SCHEMA_VERSION);
-                    ImportValidationTag.Text = string.Format("Incompatible Schema (v{0})", version);
-                    ImportValidationTag.Foreground = (Brush)FindResource("WarningBrush");
-                    return;
-                }
-
-                if (envelopeBytes.Length != 8 + payloadSize + 4)
-                {
-                    ImportLogBlock.Text = string.Format(
-                        "[VALIDATOR] Payload Size Mismatch: Envelope declares {0} bytes, actual is {1} bytes.", payloadSize, envelopeBytes.Length - 12);
-                    ImportValidationTag.Text = "Size Length Mismatch";
-                    ImportValidationTag.Foreground = (Brush)FindResource("DangerBrush");
-                    return;
-                }
-
-                byte[] payload = new byte[payloadSize];
-                Array.Copy(envelopeBytes, 8, payload, 0, payloadSize);
-
-                uint storedChecksum = BitConverter.ToUInt32(envelopeBytes, envelopeBytes.Length - 4);
-                uint calculatedChecksum = CalculateFnv1aChecksum(payload, magic, version, payloadSize);
-
-                if (storedChecksum != calculatedChecksum)
-                {
-                    ImportLogBlock.Text = string.Format(
-                        "[VALIDATOR] Checksum Error!\n[ERROR] Stored: 0x{0:X8}\n[ERROR] Computed: 0x{1:X8}\n[ERROR] Payload has been modified or corrupted.",
-                        storedChecksum, calculatedChecksum);
-                    ImportValidationTag.Text = "Checksum Failed";
-                    ImportValidationTag.Foreground = (Brush)FindResource("DangerBrush");
-                    return;
-                }
-
-                // Extract Model Name
-                string modelName = Encoding.ASCII.GetString(payload, 0, Math.Min(16, payload.Length)).Trim('\0', ' ');
-                if (string.IsNullOrEmpty(modelName)) modelName = "Unnamed Model";
-
-                ImportLogBlock.Text = string.Format(
-                    "[VALIDATOR] File: {0}\n[VALIDATOR] Prefix: 'SOURCETX_MODEL:' (MATCH)\n[VALIDATOR] Header: STXM (0x5354584D) • Schema Version: 21 (MATCH)\n[VALIDATOR] Payload Size: {1} bytes • FNV-1a Checksum: 0x{2:X8} (VALIDATED)\n[VALIDATOR] Model Name: \"{3}\"\n[VALIDATOR] Model envelope ready for transfer to active slot.",
-                    dialog.SafeFileName, payloadSize, storedChecksum, modelName);
-
-                ImportValidationTag.Text = "STXM Magic • Schema 21 • FNV-1a VERIFIED";
-                ImportValidationTag.Foreground = (Brush)FindResource("SuccessBrush");
-            }
-        }
-
-        private void ExecuteImport_Click(object sender, RoutedEventArgs e)
-        {
-            int slot = ImportTargetSlotComboBox.SelectedIndex + 1;
-            MessageBox.Show(
-                string.Format("Model envelope verified for Slot {0}.\n\nTo complete transfer over serial, open the transmitter's on-screen 'Transfer Model' screen and connect USB.", slot), 
-                "Model Transfer Ready", 
-                MessageBoxButton.OK, 
-                MessageBoxImage.Information);
-        }
-
-        #endregion
 
         #region Theme Switcher (Dark & Light)
 

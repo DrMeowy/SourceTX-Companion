@@ -7,6 +7,7 @@ Write-Host ""
 $projectDir = $PSScriptRoot
 $csproj = Join-Path $projectDir "SourceTXCompanion.csproj"
 $msbuild = "C:\Windows\Microsoft.NET\Framework64\v4.0.30319\MSBuild.exe"
+$outputDir = Join-Path $projectDir "bin\Release"
 
 if (-not (Test-Path $msbuild)) {
     Write-Host "[ERROR] MSBuild not found at $msbuild" -ForegroundColor Red
@@ -14,17 +15,21 @@ if (-not (Test-Path $msbuild)) {
 }
 
 Write-Host "[BUILD] Building SourceTX Companion (Release)..." -ForegroundColor Yellow
+if (Test-Path -LiteralPath $outputDir) {
+    $resolvedProject = [System.IO.Path]::GetFullPath($projectDir).TrimEnd('\')
+    $resolvedOutput = [System.IO.Path]::GetFullPath($outputDir).TrimEnd('\')
+    $expectedOutput = Join-Path $resolvedProject "bin\Release"
+    if ($resolvedOutput -ne $expectedOutput -or
+        -not $resolvedOutput.StartsWith($resolvedProject + '\', [System.StringComparison]::OrdinalIgnoreCase)) {
+        Write-Host "[ERROR] Refusing to clean unexpected output path: $resolvedOutput" -ForegroundColor Red
+        exit 1
+    }
+    Remove-Item -LiteralPath $resolvedOutput -Recurse -Force
+}
 & $msbuild $csproj /p:Configuration=Release /p:Platform=AnyCPU /verbosity:minimal /nologo
 
-$outputExe = Join-Path $projectDir "bin\Release\SourceTXCompanion.exe"
+$outputExe = Join-Path $outputDir "SourceTXCompanion.exe"
 if (Test-Path $outputExe) {
-    $rootExe = Join-Path $projectDir "SourceTXCompanion.exe"
-    try {
-        Copy-Item -Path $outputExe -Destination $rootExe -Force -ErrorAction Stop
-    } catch {
-        Write-Host "[NOTE] Root SourceTXCompanion.exe is currently open. Close it to update root copy." -ForegroundColor Yellow
-    }
-
     $fileInfo = Get-Item $outputExe
     Write-Host ""
     Write-Host "===================================================" -ForegroundColor Green
