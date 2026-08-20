@@ -24,6 +24,26 @@ namespace SourceTXCompanion
 
     public sealed class HardwarePinSettings
     {
+        public int DisplayMosiPin { get; set; }
+        public int DisplayClockPin { get; set; }
+        public int DisplayMisoPin { get; set; }
+        public int DisplayCsPin { get; set; }
+        public int DisplayDcPin { get; set; }
+        public int DisplayResetPin { get; set; }
+        public int DisplayBacklightPin { get; set; }
+        public int I2cSdaPin { get; set; }
+        public int I2cSclPin { get; set; }
+        public int TouchInterruptPin { get; set; }
+        public int TouchResetPin { get; set; }
+        public int TouchAddress { get; set; }
+        public int Ina219Address { get; set; }
+        public int NavigationUpPin { get; set; }
+        public int NavigationDownPin { get; set; }
+        public int NavigationLeftPin { get; set; }
+        public int NavigationRightPin { get; set; }
+        public int NavigationConfirmPin { get; set; }
+        public int SteeringPin { get; set; }
+        public int ThrottlePin { get; set; }
         public int CrsfPin { get; set; }
         public int StatusMode { get; set; }
         public int StatusMonoPin { get; set; }
@@ -33,11 +53,32 @@ namespace SourceTXCompanion
         public int StatusBrightness { get; set; }
         public int SoundMode { get; set; }
         public int SoundPin { get; set; }
+        public int VoiceRxPin { get; set; }
         public int VibrationPin { get; set; }
 
         public HardwarePinSettings()
         {
-            CrsfPin = -1;
+            DisplayMosiPin = 7;
+            DisplayClockPin = 2;
+            DisplayMisoPin = -1;
+            DisplayCsPin = 14;
+            DisplayDcPin = 13;
+            DisplayResetPin = 10;
+            DisplayBacklightPin = 3;
+            I2cSdaPin = 8;
+            I2cSclPin = 9;
+            TouchInterruptPin = 12;
+            TouchResetPin = 11;
+            TouchAddress = 0x38;
+            Ina219Address = 0x40;
+            NavigationUpPin = 35;
+            NavigationDownPin = 36;
+            NavigationLeftPin = 37;
+            NavigationRightPin = 38;
+            NavigationConfirmPin = 39;
+            SteeringPin = -1;
+            ThrottlePin = -1;
+            CrsfPin = 42;
             StatusMode = 0;
             StatusMonoPin = -1;
             StatusRedPin = -1;
@@ -46,6 +87,7 @@ namespace SourceTXCompanion
             StatusBrightness = 60;
             SoundMode = 0;
             SoundPin = -1;
+            VoiceRxPin = -1;
             VibrationPin = -1;
         }
     }
@@ -53,6 +95,7 @@ namespace SourceTXCompanion
     public sealed class SourceTxSerialClient : IDisposable
     {
         public const string CommandPrefix = "SOURCETX_XFER:";
+        public const string HardwarePrefix = "SOURCETX_HW:";
         private readonly SerialPort _port;
 
         public SourceTxSerialClient(string portName)
@@ -289,28 +332,29 @@ namespace SourceTXCompanion
         {
             settings = null;
             error = null;
-            _port.WriteLine(CommandPrefix + "GET_HW");
+            _port.WriteLine(HardwarePrefix + "GET");
             string line = ReadMatchingLine(
                 delegate(string value)
                 {
-                    return value.StartsWith(CommandPrefix + "HW:", StringComparison.Ordinal) ||
-                           value.StartsWith(CommandPrefix + "ERR:", StringComparison.Ordinal);
+                    return value.StartsWith(HardwarePrefix + "PROFILE:", StringComparison.Ordinal) ||
+                           value.StartsWith(HardwarePrefix + "ERR:", StringComparison.Ordinal);
                 },
                 timeoutMilliseconds);
 
             if (line == null)
             {
-                error = "The transmitter did not respond to the hardware settings request. Make sure the transmitter is connected and on the Model Transfer screen.";
+                error = "The transmitter did not respond. Make sure it is powered on and connected with a USB data cable.";
                 return false;
             }
-            if (line.StartsWith(CommandPrefix + "ERR:", StringComparison.Ordinal))
+            if (line.StartsWith(HardwarePrefix + "ERR:", StringComparison.Ordinal))
             {
                 error = "The transmitter returned an error: " + line;
                 return false;
             }
 
-            string payload = line.Substring((CommandPrefix + "HW:").Length);
+            string payload = line.Substring((HardwarePrefix + "PROFILE:").Length);
             var result = new HardwarePinSettings();
+            var seen = new HashSet<string>(StringComparer.Ordinal);
             string[] pairs = payload.Split(':');
             foreach (var pair in pairs)
             {
@@ -318,9 +362,30 @@ namespace SourceTXCompanion
                 if (kv.Length != 2) continue;
                 int val;
                 if (!int.TryParse(kv[1], out val)) continue;
+                seen.Add(kv[0]);
 
                 switch (kv[0])
                 {
+                    case "DISP_MOSI": result.DisplayMosiPin = val; break;
+                    case "DISP_SCLK": result.DisplayClockPin = val; break;
+                    case "DISP_MISO": result.DisplayMisoPin = val; break;
+                    case "DISP_CS": result.DisplayCsPin = val; break;
+                    case "DISP_DC": result.DisplayDcPin = val; break;
+                    case "DISP_RST": result.DisplayResetPin = val; break;
+                    case "DISP_BL": result.DisplayBacklightPin = val; break;
+                    case "I2C_SDA": result.I2cSdaPin = val; break;
+                    case "I2C_SCL": result.I2cSclPin = val; break;
+                    case "TOUCH_INT": result.TouchInterruptPin = val; break;
+                    case "TOUCH_RST": result.TouchResetPin = val; break;
+                    case "TOUCH_ADDR": result.TouchAddress = val; break;
+                    case "INA_ADDR": result.Ina219Address = val; break;
+                    case "NAV_U": result.NavigationUpPin = val; break;
+                    case "NAV_D": result.NavigationDownPin = val; break;
+                    case "NAV_L": result.NavigationLeftPin = val; break;
+                    case "NAV_R": result.NavigationRightPin = val; break;
+                    case "NAV_OK": result.NavigationConfirmPin = val; break;
+                    case "STEER": result.SteeringPin = val; break;
+                    case "THROT": result.ThrottlePin = val; break;
                     case "CRSF": result.CrsfPin = val; break;
                     case "STAT_MODE": result.StatusMode = val; break;
                     case "STAT_MONO": result.StatusMonoPin = val; break;
@@ -330,8 +395,30 @@ namespace SourceTXCompanion
                     case "STAT_BRIGHT": result.StatusBrightness = val; break;
                     case "SND_MODE": result.SoundMode = val; break;
                     case "SND_PIN": result.SoundPin = val; break;
+                    case "VOICE_RX": result.VoiceRxPin = val; break;
                     case "VIB_PIN": result.VibrationPin = val; break;
                 }
+            }
+            string[] required = new string[] {
+                "SCHEMA", "DISP_MOSI", "DISP_SCLK", "DISP_MISO", "DISP_CS",
+                "DISP_DC", "DISP_RST", "DISP_BL", "I2C_SDA", "I2C_SCL",
+                "TOUCH_INT", "TOUCH_RST", "TOUCH_ADDR", "INA_ADDR", "NAV_U",
+                "NAV_D", "NAV_L", "NAV_R", "NAV_OK", "STEER", "THROT", "CRSF",
+                "STAT_MODE", "STAT_MONO", "STAT_R", "STAT_G", "STAT_B",
+                "STAT_BRIGHT", "SND_MODE", "SND_PIN", "VOICE_RX", "VIB_PIN"
+            };
+            foreach (string key in required)
+            {
+                if (seen.Contains(key)) continue;
+                error = "The transmitter returned an incomplete hardware profile. Read it again before saving.";
+                return false;
+            }
+            int schemaValue;
+            if (!int.TryParse(Array.Find(pairs, p => p.StartsWith("SCHEMA=", StringComparison.Ordinal))
+                    .Substring("SCHEMA=".Length), out schemaValue) || schemaValue != 1)
+            {
+                error = "This transmitter uses an incompatible hardware-profile version.";
+                return false;
             }
             settings = result;
             return true;
@@ -346,17 +433,22 @@ namespace SourceTXCompanion
             if (settings == null) throw new ArgumentNullException("settings");
 
             string cmd = string.Format(
-                "{0}SET_HW:CRSF={1}:STAT_MODE={2}:STAT_MONO={3}:STAT_R={4}:STAT_G={5}:STAT_B={6}:STAT_BRIGHT={7}:SND_MODE={8}:SND_PIN={9}:VIB_PIN={10}",
-                CommandPrefix,
-                settings.CrsfPin,
-                settings.StatusMode,
-                settings.StatusMonoPin,
-                settings.StatusRedPin,
-                settings.StatusGreenPin,
-                settings.StatusBluePin,
-                settings.StatusBrightness,
-                settings.SoundMode,
-                settings.SoundPin,
+                "{0}SET:SCHEMA=1:DISP_MOSI={1}:DISP_SCLK={2}:DISP_MISO={3}:DISP_CS={4}:DISP_DC={5}:DISP_RST={6}:DISP_BL={7}:I2C_SDA={8}:I2C_SCL={9}:TOUCH_INT={10}:TOUCH_RST={11}:TOUCH_ADDR={12}:INA_ADDR={13}:NAV_U={14}:NAV_D={15}:NAV_L={16}:NAV_R={17}:NAV_OK={18}:STEER={19}:THROT={20}:CRSF={21}:STAT_MODE={22}:STAT_MONO={23}:STAT_R={24}:STAT_G={25}:STAT_B={26}:STAT_BRIGHT={27}:SND_MODE={28}:SND_PIN={29}:VOICE_RX={30}:VIB_PIN={31}",
+                HardwarePrefix,
+                settings.DisplayMosiPin, settings.DisplayClockPin,
+                settings.DisplayMisoPin, settings.DisplayCsPin,
+                settings.DisplayDcPin, settings.DisplayResetPin,
+                settings.DisplayBacklightPin, settings.I2cSdaPin,
+                settings.I2cSclPin, settings.TouchInterruptPin,
+                settings.TouchResetPin, settings.TouchAddress,
+                settings.Ina219Address, settings.NavigationUpPin,
+                settings.NavigationDownPin, settings.NavigationLeftPin,
+                settings.NavigationRightPin, settings.NavigationConfirmPin,
+                settings.SteeringPin, settings.ThrottlePin, settings.CrsfPin,
+                settings.StatusMode, settings.StatusMonoPin,
+                settings.StatusRedPin, settings.StatusGreenPin,
+                settings.StatusBluePin, settings.StatusBrightness,
+                settings.SoundMode, settings.SoundPin, settings.VoiceRxPin,
                 settings.VibrationPin
             );
 
@@ -364,8 +456,8 @@ namespace SourceTXCompanion
             string line = ReadMatchingLine(
                 delegate(string value)
                 {
-                    return value == CommandPrefix + "OK:SET_HW" ||
-                           value.StartsWith(CommandPrefix + "ERR:", StringComparison.Ordinal);
+                    return value == HardwarePrefix + "OK:SET:REBOOT" ||
+                           value.StartsWith(HardwarePrefix + "ERR:", StringComparison.Ordinal);
                 },
                 timeoutMilliseconds);
 
@@ -374,7 +466,7 @@ namespace SourceTXCompanion
                 error = "The transmitter did not confirm the hardware settings write. Check connection.";
                 return false;
             }
-            if (line != CommandPrefix + "OK:SET_HW")
+            if (line != HardwarePrefix + "OK:SET:REBOOT")
             {
                 error = "The transmitter rejected the hardware settings: " + line;
                 return false;

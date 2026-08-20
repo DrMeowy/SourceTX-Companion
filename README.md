@@ -46,16 +46,23 @@ The Install screen provisions a blank supported ESP32-S3 from the public
 6. optionally erases flash, writes the complete image at `0x0000`, verifies the
    write and reboots.
 
-When the public feed is unavailable, Companion uses its bundled image only if
-the file matches the immutable SHA-256 trust anchor compiled into the
-application. `targets.json` mirrors the digest for diagnostics but cannot
-replace the compiled feed, key, digest, chip, or flash contract.
+Factory installation is online-only and fails closed when the signed release
+feed is unavailable. Companion never substitutes a bundled or cached firmware
+image. `targets.json` describes the UI catalog but cannot replace the compiled
+feed, key, chip, flash, hardware-ID, or release-channel trust anchors.
 
-The current supported target is
-`sourcetx-s3-st7796-ft6x36`: ESP32-S3-FH4R2, 4 MB DIO/80 MHz flash, 2 MB
-quad PSRAM, ST7796U 480x320 display and FT6x36 touch controller. Development
-profiles remain disabled until they have their own builds and signed factory
-contracts.
+The Stable target is `sourcetx-s3-st7796-ft6x36`: ESP32-S3-FH4R2, 4 MB
+DIO/80 MHz flash, 2 MB quad PSRAM, ST7796U 480x320 display and FT6x36 touch.
+The separately identified Experimental target is
+`sourcetx-s3-n16r8-st7796-ft6x36`: 16 MB QIO/80 MHz flash with 8 MB octal
+PSRAM and the same display/touch reference. Other profiles remain disabled
+until they have their own builds and signed factory contracts.
+
+Normal application updates are installed from
+**Settings → System → Firmware Update** on SourceTX. The transmitter verifies
+the signed target-specific feed and writes the inactive OTA slot
+transactionally. Companion does not write an application image to a fixed
+offset.
 
 ## Model backup and restore
 

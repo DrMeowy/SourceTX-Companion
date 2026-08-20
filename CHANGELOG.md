@@ -2,13 +2,27 @@
 
 ## Unreleased
 
+- Removed bundled firmware and all fixed-offset application flashing. Factory
+  installation now requires the current signed online package; normal updates
+  use SourceTX's transactional inactive-slot OTA for both supported targets.
+- Prepared Windows Companion v0.2.0 with consistent runtime, UI, HTTP client,
+  assembly and hardware-catalog version metadata.
+- Updated the official firmware target and user-facing reference from the
+  retired pre-public v1.98 numbering to SourceTX v1.0.0. Companion keeps its
+  independent pre-1.0 application version.
+- Added an explicit ESP32-S3 N16R8 experimental factory-install target. It
+  uses its own signed manifest, requires a detected 16 MB flash chip, and has
+  no fallback to the bundled 4 MB factory image.
+- Corrected the N16R8 factory profile to DIO/80 MHz so Companion requires the
+  same flash mode encoded by the generated bootloader.
 - Enabled the **Configure Transmitter** feature on the home dashboard with a
   dedicated hardware configuration view.
-- Added live USB Serial communication (`SOURCETX_XFER:GET_HW` and `SET_HW`) to
-  read and write CRSF UART pins, status LED indicator mode/pins/brightness, and
-  audio/haptic feedback pins directly into transmitter NVS memory.
-- Added GPIO conflict validation to prevent assigning the same physical pin to
-  multiple peripherals.
+- Added always-available versioned USB hardware provisioning (`SOURCETX_HW`)
+  for the reference ST7796 display/backlight, shared I²C/touch/INA219 bus,
+  navigation buttons, steering/throttle ADCs, CRSF, status LED, audio/voice and
+  vibration pins. Model backup/restore remains separately screen-gated.
+- Added GPIO conflict and ADC-capability validation, with native USB,
+  flash/PSRAM and boot-strapping pins excluded from unattended assignment.
 - Added a post-installation and post-update prompt asking the user if they would
   like to configure hardware pins immediately after flashing completes.
 

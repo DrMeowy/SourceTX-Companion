@@ -32,9 +32,11 @@ namespace SourceTXCompanion
         public string Psram { get; set; }
         public string PartitionNvs { get; set; }
         public string HardwareId { get; set; }
+        public string Channel { get; set; }
+        public string UpdateManifestUrl { get; set; }
+        public string UpdateManifestSignatureUrl { get; set; }
         public string FactoryManifestUrl { get; set; }
         public string FactoryManifestSignatureUrl { get; set; }
-        public string OfflineFactorySha256 { get; set; }
         public bool Enabled { get; set; }
 
         public override string ToString() { return Name; }
@@ -130,7 +132,7 @@ namespace SourceTXCompanion
         public TimeoutWebClient()
         {
             TimeoutMilliseconds = 15000;
-            Headers[HttpRequestHeader.UserAgent] = "SourceTX-Companion/0.1.3";
+            Headers[HttpRequestHeader.UserAgent] = "SourceTX-Companion/0.2.0";
         }
 
         protected override WebRequest GetWebRequest(Uri address)
@@ -590,10 +592,13 @@ namespace SourceTXCompanion
             "https://github.com/DrMeowy/SourceTX-Updates/releases/latest/download/factory.json";
         private const string OFFICIAL_FACTORY_MANIFEST_SIGNATURE_URL =
             "https://github.com/DrMeowy/SourceTX-Updates/releases/latest/download/factory.json.sig";
-        private const string OFFICIAL_OFFLINE_FACTORY_SHA256 =
-            "379932294473c9b355845dda07efaf53ee4e8deec407dc29fcbb56ccaac9a521";
+        private const string N16R8_BOARD_ID = "esp32s3-16mb";
+        private const string N16R8_HARDWARE_ID = "sourcetx-s3-n16r8-st7796-ft6x36";
+        private const string N16R8_FACTORY_MANIFEST_URL =
+            "https://github.com/DrMeowy/SourceTX-Updates/releases/latest/download/factory-n16r8.json";
+        private const string N16R8_FACTORY_MANIFEST_SIGNATURE_URL =
+            "https://github.com/DrMeowy/SourceTX-Updates/releases/latest/download/factory-n16r8.json.sig";
 
-        private bool _isFlashing = false;
         private bool _isInstalling = false;
         private bool _isSyncingSelectors = false;
 
@@ -669,9 +674,11 @@ namespace SourceTXCompanion
                                     Psram = b.ContainsKey("psram") ? b["psram"].ToString() : "",
                                     PartitionNvs = b.ContainsKey("partition_nvs") ? b["partition_nvs"].ToString() : "0x3D0000",
                                     HardwareId = b.ContainsKey("hardware_id") ? b["hardware_id"].ToString() : "",
+                                    Channel = b.ContainsKey("channel") ? b["channel"].ToString() : "stable",
+                                    UpdateManifestUrl = b.ContainsKey("update_manifest_url") ? b["update_manifest_url"].ToString() : "",
+                                    UpdateManifestSignatureUrl = b.ContainsKey("update_manifest_signature_url") ? b["update_manifest_signature_url"].ToString() : "",
                                     FactoryManifestUrl = b.ContainsKey("factory_manifest_url") ? b["factory_manifest_url"].ToString() : "",
                                     FactoryManifestSignatureUrl = b.ContainsKey("factory_manifest_signature_url") ? b["factory_manifest_signature_url"].ToString() : "",
-                                    OfflineFactorySha256 = b.ContainsKey("offline_factory_sha256") ? b["offline_factory_sha256"].ToString() : "",
                                     Enabled = b.ContainsKey("enabled") ? Convert.ToBoolean(b["enabled"]) : true
                                 });
                             }
@@ -715,6 +722,10 @@ namespace SourceTXCompanion
                 {
                     ApplyOfficialFactoryTrust(board);
                 }
+                else if (board.Id == N16R8_BOARD_ID)
+                {
+                    ApplyN16R8FactoryTrust(board);
+                }
                 else
                 {
                     board.Enabled = false;
@@ -735,9 +746,9 @@ namespace SourceTXCompanion
                     Psram = "2MB Quad-PSRAM",
                     PartitionNvs = "0x3D0000",
                     HardwareId = OFFICIAL_HARDWARE_ID,
+                    Channel = "stable",
                     FactoryManifestUrl = OFFICIAL_FACTORY_MANIFEST_URL,
                     FactoryManifestSignatureUrl = OFFICIAL_FACTORY_MANIFEST_SIGNATURE_URL,
-                    OfflineFactorySha256 = OFFICIAL_OFFLINE_FACTORY_SHA256,
                     Enabled = true
                 });
             }
@@ -773,21 +784,46 @@ namespace SourceTXCompanion
             board.FlashFreq = "80m";
             board.PartitionNvs = "0x3D0000";
             board.HardwareId = OFFICIAL_HARDWARE_ID;
+            board.Channel = "stable";
             board.FactoryManifestUrl = OFFICIAL_FACTORY_MANIFEST_URL;
             board.FactoryManifestSignatureUrl = OFFICIAL_FACTORY_MANIFEST_SIGNATURE_URL;
-            board.OfflineFactorySha256 = OFFICIAL_OFFLINE_FACTORY_SHA256;
+        }
+
+        private static void ApplyN16R8FactoryTrust(BoardProfile board)
+        {
+            board.Name = "ESP32-S3 N16R8 (16MB Flash, 8MB Octal PSRAM) [Experimental]";
+            board.Chip = "esp32s3";
+            board.FlashSize = "16MB";
+            board.FlashMode = "dio";
+            board.FlashFreq = "80m";
+            board.Psram = "8MB Octal-PSRAM";
+            board.PartitionNvs = "0x810000";
+            board.HardwareId = N16R8_HARDWARE_ID;
+            board.Channel = "experimental";
+            board.FactoryManifestUrl = N16R8_FACTORY_MANIFEST_URL;
+            board.FactoryManifestSignatureUrl = N16R8_FACTORY_MANIFEST_SIGNATURE_URL;
+            board.Enabled = true;
         }
 
         private static bool IsTrustedFactoryTarget(BoardProfile board)
         {
-            return board != null && board.Enabled &&
-                board.Id == OFFICIAL_BOARD_ID &&
-                board.HardwareId == OFFICIAL_HARDWARE_ID &&
-                board.Chip == "esp32s3" && board.FlashSize == "4MB" &&
-                board.FlashMode == "dio" && board.FlashFreq == "80m" &&
-                board.FactoryManifestUrl == OFFICIAL_FACTORY_MANIFEST_URL &&
-                board.FactoryManifestSignatureUrl == OFFICIAL_FACTORY_MANIFEST_SIGNATURE_URL &&
-                board.OfflineFactorySha256 == OFFICIAL_OFFLINE_FACTORY_SHA256;
+            if (board == null || !board.Enabled || board.Chip != "esp32s3" ||
+                board.FlashFreq != "80m") return false;
+
+            if (board.Id == OFFICIAL_BOARD_ID)
+            {
+                return board.HardwareId == OFFICIAL_HARDWARE_ID &&
+                    board.Channel == "stable" && board.FlashSize == "4MB" &&
+                    board.FlashMode == "dio" &&
+                    board.FactoryManifestUrl == OFFICIAL_FACTORY_MANIFEST_URL &&
+                    board.FactoryManifestSignatureUrl == OFFICIAL_FACTORY_MANIFEST_SIGNATURE_URL;
+            }
+            return board.Id == N16R8_BOARD_ID &&
+                board.HardwareId == N16R8_HARDWARE_ID &&
+                board.Channel == "experimental" && board.FlashSize == "16MB" &&
+                board.FlashMode == "dio" &&
+                board.FactoryManifestUrl == N16R8_FACTORY_MANIFEST_URL &&
+                board.FactoryManifestSignatureUrl == N16R8_FACTORY_MANIFEST_SIGNATURE_URL;
         }
 
         private static bool IsTrustedFactoryDisplay(DisplayProfile display)
@@ -866,6 +902,25 @@ namespace SourceTXCompanion
         {
             var board = GetSelectedBoard();
             var display = GetSelectedDisplay();
+            bool experimental = string.Equals(
+                board.Channel, "experimental", StringComparison.Ordinal);
+
+            if (InstallStableChannelButton != null && InstallExperimentalChannelButton != null)
+            {
+                InstallStableChannelButton.Style = (Style)FindResource(
+                    experimental ? "ModernOutlineButton" : "ModernAccentButton");
+                InstallExperimentalChannelButton.Style = (Style)FindResource(
+                    experimental ? "ModernAccentButton" : "ModernOutlineButton");
+                InstallStableChannelButton.IsEnabled = true;
+                InstallExperimentalChannelButton.IsEnabled = true;
+            }
+
+            if (InstallPackageChannelText != null)
+            {
+                InstallPackageChannelText.Text = experimental
+                    ? "Verified experimental N16R8 firmware"
+                    : "Verified stable firmware";
+            }
 
             if (InstallSpecsBlock != null)
             {
@@ -875,17 +930,21 @@ namespace SourceTXCompanion
 
             if (InstallPinoutBlock != null)
             {
-                InstallPinoutBlock.Text =
-                    "The board, flash memory, display, and touch controller are checked before installation.";
+                InstallPinoutBlock.Text = experimental
+                    ? "Confirm the module marking says N16R8. Companion verifies the ESP32-S3 and 16 MB flash before writing."
+                    : "The board, flash memory, display, and touch controller are checked before installation.";
             }
 
             if (InstallTargetStatusBadge != null && InstallTargetStatusText != null)
             {
                 if (IsTrustedFactoryTarget(board) && IsTrustedFactoryDisplay(display))
                 {
-                    InstallTargetStatusBadge.Background = new SolidColorBrush(Color.FromRgb(0x1B, 0x33, 0x24));
-                    InstallTargetStatusText.Text = "Supported";
-                    InstallTargetStatusText.Foreground = (Brush)FindResource("SuccessBrush");
+                    InstallTargetStatusBadge.Background = new SolidColorBrush(
+                        experimental ? Color.FromRgb(0x3B, 0x28, 0x14)
+                                     : Color.FromRgb(0x1B, 0x33, 0x24));
+                    InstallTargetStatusText.Text = experimental ? "Experimental" : "Supported";
+                    InstallTargetStatusText.Foreground = (Brush)FindResource(
+                        experimental ? "WarningBrush" : "SuccessBrush");
                 }
                 else
                 {
@@ -941,14 +1000,14 @@ namespace SourceTXCompanion
         {
             HideAllViews();
             HomeView.Visibility = Visibility.Visible;
-            StatusBarText.Text = "Ready • SourceTX Companion v0.1.3";
+            StatusBarText.Text = "Ready • SourceTX Companion v0.2.0";
         }
 
         private void NavToInstall_Click(object sender, RoutedEventArgs e)
         {
             HideAllViews();
             InstallView.Visibility = Visibility.Visible;
-            StatusBarText.Text = "Mode: Factory Build Installation & Device Provisioning (v1.98)";
+            StatusBarText.Text = "Mode: Factory Build Installation & Device Provisioning (v1.0.0)";
             AutoDetectSerialPorts(false);
         }
 
@@ -956,7 +1015,7 @@ namespace SourceTXCompanion
         {
             HideAllViews();
             UpdateView.Visibility = Visibility.Visible;
-            StatusBarText.Text = "Mode: Firmware Flasher & 1-Click Compiler (v1.98)";
+            StatusBarText.Text = "Mode: Safe OTA Guidance & USB Recovery (v1.0.0)";
             AutoDetectSerialPorts(false);
         }
 
@@ -1001,7 +1060,6 @@ namespace SourceTXCompanion
         {
             _detectedDevices = ScanSerialDevices();
 
-            PortComboBox.Items.Clear();
             if (InstallPortComboBox != null) InstallPortComboBox.Items.Clear();
             if (ExportPortComboBox != null) ExportPortComboBox.Items.Clear();
             if (ImportPortComboBox != null) ImportPortComboBox.Items.Clear();
@@ -1011,14 +1069,12 @@ namespace SourceTXCompanion
             {
                 foreach (var dev in _detectedDevices)
                 {
-                    PortComboBox.Items.Add(dev);
                     if (InstallPortComboBox != null) InstallPortComboBox.Items.Add(dev);
                     if (ExportPortComboBox != null) ExportPortComboBox.Items.Add(dev);
                     if (ImportPortComboBox != null) ImportPortComboBox.Items.Add(dev);
                     if (ConfigPortComboBox != null) ConfigPortComboBox.Items.Add(dev);
                 }
 
-                PortComboBox.SelectedIndex = 0;
                 if (InstallPortComboBox != null) InstallPortComboBox.SelectedIndex = 0;
                 if (ExportPortComboBox != null) ExportPortComboBox.SelectedIndex = 0;
                 if (ImportPortComboBox != null) ImportPortComboBox.SelectedIndex = 0;
@@ -1311,7 +1367,7 @@ namespace SourceTXCompanion
             FactoryReleaseManifest manifest, BoardProfile board)
         {
             if (manifest.Schema != 1 || manifest.Product != "SourceTX" ||
-                manifest.Channel != "stable")
+                !string.Equals(manifest.Channel, board.Channel, StringComparison.Ordinal))
             {
                 throw new InvalidDataException("Factory manifest identity or schema is unsupported.");
             }
@@ -1455,32 +1511,9 @@ namespace SourceTXCompanion
                 {
                     try { Directory.Delete(temporaryDirectory, true); } catch { }
                 }
-                AppendInstallLog("[DOWNLOAD] Online factory acquisition unavailable: " + ex.Message);
-                AppendInstallLog("[OFFLINE] Checking bundled factory image against its pinned release digest...");
-            }
-
-            string offlinePath = FindBinaryPath("SourceTX_ESP32S3_SuperMini_Factory.bin");
-            if (!File.Exists(offlinePath)) offlinePath = FindBinaryPath("firmware.factory.bin");
-            if (!File.Exists(offlinePath) ||
-                string.IsNullOrWhiteSpace(board.OfflineFactorySha256))
-            {
-                AppendInstallLog("[ERROR] No verified offline factory image is available.");
+                AppendInstallLog("[ERROR] Signed online factory acquisition failed: " + ex.Message);
                 return null;
             }
-            string offlineDigest = FactoryReleaseSecurity.Sha256HexFile(offlinePath);
-            if (!FactoryReleaseSecurity.FixedTimeEqualsHex(
-                board.OfflineFactorySha256, offlineDigest))
-            {
-                AppendInstallLog("[ERROR] Bundled factory image does not match its pinned SHA-256 digest.");
-                return null;
-            }
-            AppendInstallLog(string.Format(
-                "[OFFLINE] Bundled factory image verified: SHA-256 {0}", offlineDigest));
-            return new FactoryImagePackage
-            {
-                ImagePath = offlinePath,
-                SourceDescription = "verified bundled offline image"
-            };
         }
 
         private void ReleaseFactoryPackage(FactoryImagePackage package)
@@ -1509,7 +1542,7 @@ namespace SourceTXCompanion
             if (!IsTrustedFactoryTarget(board) || !IsTrustedFactoryDisplay(display))
             {
                 MessageBox.Show(
-                    "The selected board/display combination is not an approved signed factory target.\n\nPlease select the verified ESP32-S3 SuperMini 4MB and ST7796U/FT6x36 reference target.",
+                    "The selected board/display combination does not have an approved signed factory profile.",
                     "Profile In Development", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
@@ -1538,7 +1571,7 @@ namespace SourceTXCompanion
             if (factoryPackage == null)
             {
                 MessageBox.Show(
-                    "A signed online factory release could not be downloaded, and the bundled offline image did not pass its pinned integrity check.",
+                    "The signed factory release could not be downloaded or verified. Check your internet connection and try again.",
                     "Factory Image Unavailable", MessageBoxButton.OK, MessageBoxImage.Error);
                 _isInstalling = false;
                 RunInstallButton.IsEnabled = true;
@@ -1708,103 +1741,13 @@ namespace SourceTXCompanion
 
         #region Firmware Flasher / Recovery
 
-        private async void StartFlash_Click(object sender, RoutedEventArgs e)
+        private void StartFlash_Click(object sender, RoutedEventArgs e)
         {
-            if (_isFlashing) return;
-
-            var board = GetSelectedBoard();
-            if (!board.Enabled)
-            {
-                MessageBox.Show(string.Format("The selected board profile '{0}' is in development.", board.Name), "In Development", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            string selectedPort = ExtractCleanPort(PortComboBox.SelectedItem);
-            if (string.IsNullOrEmpty(selectedPort))
-            {
-                MessageBox.Show("No active COM port selected. Please connect your transmitter and click 'Find Transmitter'.", "No Port Selected", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            string esptool = FindEsptoolPath();
-            if (!File.Exists(esptool))
-            {
-                MessageBox.Show("esptool.exe flasher not found.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-            bool isRecoveryMode = (FlashModeComboBox != null && FlashModeComboBox.SelectedIndex == 1);
-            string offset = isRecoveryMode ? "0x0000" : "0x10000";
-            string targetFile = isRecoveryMode ? FindBinaryPath("SourceTX_ESP32S3_SuperMini_Factory.bin") : FindBinaryPath("SourceTX_ESP32S3_SuperMini_App.bin");
-
-            if (!File.Exists(targetFile))
-            {
-                MessageBox.Show(string.Format("Firmware binary not found: {0}", targetFile), "File Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-            // Strictly Validate Binary Image Structure and Checksum
-            var validation = FirmwareValidator.ValidateFirmwareImage(targetFile, offset);
-            if (!validation.IsValid)
-            {
-                MessageBox.Show(string.Format("Firmware verification failed:\n\n{0}", validation.ErrorMessage), "Invalid Firmware Image", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-            _isFlashing = true;
-            FlashButton.IsEnabled = false;
-            FlashProgressBar.Value = 0;
-            FlashPercentText.Text = "0%";
-            FlashStatusText.Text = string.Format("Flashing verified firmware to {0} (offset {1}, {2})...", selectedPort, offset, board.FlashSize);
-
-            string baud = "115200";
-
-            AppendFlashLog("==================================================");
-            AppendFlashLog(string.Format("[FLASH] Verified Image: {0} ({1:N0} bytes @ {2})", Path.GetFileName(targetFile), validation.FileSizeBytes, offset));
-            AppendFlashLog(string.Format("[FLASH] SHA-256: {0}", validation.Sha256Hash));
-            AppendFlashLog(string.Format("[FLASH] Writing flash --flash-size {0} --flash-mode {1}...", board.FlashSize, board.FlashMode));
-
-            string args = string.Format("--chip esp32s3 --port {0} --baud {1} --before default-reset --after hard-reset write-flash -z --flash-mode {2} --flash-freq {3} --flash-size {4} {5} \"{6}\"",
-                selectedPort, baud, board.FlashMode, board.FlashFreq, board.FlashSize, offset, targetFile);
-
-            bool success = await RunProcessAsync(esptool, args, (line) =>
-            {
-                AppendFlashLog(line);
-                int percent = ExtractPercent(line);
-                if (percent > 0)
-                {
-                    FlashProgressBar.Value = percent;
-                    FlashPercentText.Text = string.Format("{0}%", percent);
-                }
-            });
-
-            if (success)
-            {
-                FlashProgressBar.Value = 100;
-                FlashPercentText.Text = "100%";
-                FlashStatusText.Text = "Flash completed successfully! Transmitter rebooted.";
-                AppendFlashLog("==================================================");
-                AppendFlashLog("[SUCCESS] SourceTX firmware updated successfully.");
-
-                var prompt = MessageBox.Show(
-                    "SourceTX firmware was updated successfully!\n\nYour compatible saved models and settings remain available.\n\nWould you like to review or configure hardware pins now?",
-                    "Update Complete",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Information);
-
-                if (prompt == MessageBoxResult.Yes)
-                {
-                    NavToConfig_Click(null, null);
-                }
-            }
-            else
-            {
-                FlashStatusText.Text = "Flashing failed. Review console logs above.";
-                AppendFlashLog("[ERROR] Flashing failed. Hold BOOT button while plugging in USB cable and retry.");
-            }
-
-            _isFlashing = false;
-            FlashButton.IsEnabled = true;
+            MessageBox.Show(
+                "Normal SourceTX updates are installed on the transmitter at Settings > System > Firmware Update. This safely writes and verifies the inactive OTA slot.\n\nFor a blank board or USB recovery, return to the main menu and choose Install SourceTX; Companion will download and verify the signed factory package for the selected 4 MB Stable or N16R8 Experimental target.",
+                "Safe SourceTX Update",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
         }
 
         private void AppendFlashLog(string message)
@@ -2054,7 +1997,7 @@ namespace SourceTXCompanion
 
         public static class UpdateChecker
         {
-            public const string CURRENT_VERSION = "0.1.3";
+            public const string CURRENT_VERSION = "0.2.0";
             private const string GITHUB_RELEASES_API = "https://api.github.com/repos/DrMeowy/SourceTX-Companion/releases/latest";
             private const string GITHUB_TARGETS_URL = "https://raw.githubusercontent.com/DrMeowy/SourceTX-Companion/main/targets.json";
             private const string GITHUB_RELEASES_PAGE = "https://github.com/DrMeowy/SourceTX-Companion/releases";
@@ -2085,7 +2028,7 @@ namespace SourceTXCompanion
                         try
                         {
                             var req = (System.Net.HttpWebRequest)System.Net.WebRequest.Create(GITHUB_RELEASES_API);
-                            req.UserAgent = "SourceTXCompanion-UpdateChecker/0.1.3";
+                            req.UserAgent = "SourceTXCompanion-UpdateChecker/0.2.0";
                             req.Timeout = 5000;
                             req.Accept = "application/vnd.github.v3+json";
 
@@ -2113,7 +2056,7 @@ namespace SourceTXCompanion
                         if (string.IsNullOrEmpty(latestVer))
                         {
                             var req = (System.Net.HttpWebRequest)System.Net.WebRequest.Create(GITHUB_TARGETS_URL);
-                            req.UserAgent = "SourceTXCompanion-UpdateChecker/0.1.3";
+                            req.UserAgent = "SourceTXCompanion-UpdateChecker/0.2.0";
                             req.Timeout = 5000;
 
                             using (var resp = (System.Net.HttpWebResponse)req.GetResponse())
@@ -2216,7 +2159,7 @@ namespace SourceTXCompanion
                             string.Format(
                                 "You are running the latest version of SourceTX Companion!\n\n" +
                                 "• Companion Version: v{0} (Latest)\n" +
-                                "• Firmware Target: v1.98 Official Reference\n" +
+                                "• Firmware Target: v1.0.0 Official Reference\n" +
                                 "• GitHub Repository: DrMeowy/SourceTX-Companion\n" +
                                 "• Release Channel: Stable",
                                 result.CurrentVersion),
@@ -2247,7 +2190,7 @@ namespace SourceTXCompanion
             }
             finally
             {
-                StatusBarText.Text = "Ready • SourceTX Companion v0.1.3";
+                StatusBarText.Text = "Ready • SourceTX Companion v0.2.0";
                 if (btn != null) btn.IsEnabled = true;
             }
         }

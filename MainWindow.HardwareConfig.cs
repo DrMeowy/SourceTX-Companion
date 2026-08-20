@@ -22,10 +22,11 @@ namespace SourceTXCompanion
             var list = new List<GpioOption>();
             list.Add(new GpioOption { Pin = -1, Display = "Disabled (-1)" });
 
-            // Assignable GPIOs on ESP32-S3 (excluding internal Flash/PSRAM 26-32 and USB D-/D+ 19, 20)
+            // Safe unattended provisioning pins. Native USB, flash/PSRAM,
+            // GPIO0 and boot-strapping pins stay fixed for recovery safety.
             int[] gpios = new int[] {
-                0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 21,
-                33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48
+                1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 21,
+                33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 47, 48
             };
 
             foreach (int pin in gpios)
@@ -34,8 +35,18 @@ namespace SourceTXCompanion
                 if (pin == 42) extra = " (Default CRSF Single-Wire)";
                 else if (pin == 43) extra = " (ESP32-S3 UART0 TX)";
                 else if (pin == 44) extra = " (ESP32-S3 UART0 RX)";
-                else if (pin == 45 || pin == 46) extra = " (Boot Strap)";
                 list.Add(new GpioOption { Pin = pin, Display = string.Format("GPIO {0}{1}", pin, extra) });
+            }
+            return list;
+        }
+
+        private List<GpioOption> GetAnalogGpioOptions()
+        {
+            var list = new List<GpioOption>();
+            list.Add(new GpioOption { Pin = -1, Display = "Not assigned" });
+            foreach (int pin in new int[] { 1, 4, 5, 6, 15, 16, 17, 18 })
+            {
+                list.Add(new GpioOption { Pin = pin, Display = string.Format("GPIO {0} (ADC)", pin) });
             }
             return list;
         }
@@ -46,12 +57,22 @@ namespace SourceTXCompanion
 
             var options = GetGpioOptions();
             var pinBoxes = new ComboBox[] {
+                DisplayMosiPinComboBox, DisplayClockPinComboBox,
+                DisplayMisoPinComboBox, DisplayCsPinComboBox,
+                DisplayDcPinComboBox, DisplayResetPinComboBox,
+                DisplayBacklightPinComboBox, I2cSdaPinComboBox,
+                I2cSclPinComboBox, TouchInterruptPinComboBox,
+                TouchResetPinComboBox, NavigationUpPinComboBox,
+                NavigationDownPinComboBox, NavigationLeftPinComboBox,
+                NavigationRightPinComboBox, NavigationConfirmPinComboBox,
+                SteeringPinComboBox, ThrottlePinComboBox,
                 CrsfPinComboBox,
                 StatusMonoPinComboBox,
                 StatusRedPinComboBox,
                 StatusGreenPinComboBox,
                 StatusBluePinComboBox,
                 SoundPinComboBox,
+                VoiceRxPinComboBox,
                 VibrationPinComboBox
             };
 
@@ -61,14 +82,39 @@ namespace SourceTXCompanion
                 foreach (var opt in options) cb.Items.Add(opt);
                 cb.SelectedIndex = 0;
             }
+            foreach (var cb in new ComboBox[] { SteeringPinComboBox, ThrottlePinComboBox })
+            {
+                cb.Items.Clear();
+                foreach (var opt in GetAnalogGpioOptions()) cb.Items.Add(opt);
+                cb.SelectedIndex = 0;
+            }
 
             // Defaults (GPIO 42 for single-wire CRSF)
+            SelectPin(DisplayMosiPinComboBox, 7);
+            SelectPin(DisplayClockPinComboBox, 2);
+            SelectPin(DisplayMisoPinComboBox, -1);
+            SelectPin(DisplayCsPinComboBox, 14);
+            SelectPin(DisplayDcPinComboBox, 13);
+            SelectPin(DisplayResetPinComboBox, 10);
+            SelectPin(DisplayBacklightPinComboBox, 3);
+            SelectPin(I2cSdaPinComboBox, 8);
+            SelectPin(I2cSclPinComboBox, 9);
+            SelectPin(TouchInterruptPinComboBox, 12);
+            SelectPin(TouchResetPinComboBox, 11);
+            SelectPin(NavigationUpPinComboBox, 35);
+            SelectPin(NavigationDownPinComboBox, 36);
+            SelectPin(NavigationLeftPinComboBox, 37);
+            SelectPin(NavigationRightPinComboBox, 38);
+            SelectPin(NavigationConfirmPinComboBox, 39);
+            SelectPin(SteeringPinComboBox, -1);
+            SelectPin(ThrottlePinComboBox, -1);
             SelectPin(CrsfPinComboBox, 42);
             SelectPin(StatusMonoPinComboBox, -1);
             SelectPin(StatusRedPinComboBox, -1);
             SelectPin(StatusGreenPinComboBox, -1);
             SelectPin(StatusBluePinComboBox, -1);
             SelectPin(SoundPinComboBox, -1);
+            SelectPin(VoiceRxPinComboBox, -1);
             SelectPin(VibrationPinComboBox, -1);
             StatusModeComboBox.SelectedIndex = 0;
             SoundModeComboBox.SelectedIndex = 0;
@@ -169,13 +215,33 @@ namespace SourceTXCompanion
                 {
                     AppendConfigLog("[ERROR] " + (readError ?? "Unknown read failure."));
                     MessageBox.Show(
-                        readError ?? "Transmitter did not respond. Open Settings → Transmitter → Model Transfer on the radio.",
+                        readError ?? "Transmitter did not respond over USB.",
                         "Read Failed",
                         MessageBoxButton.OK,
                         MessageBoxImage.Warning);
                     return;
                 }
 
+                SelectPin(DisplayMosiPinComboBox, hw.DisplayMosiPin);
+                SelectPin(DisplayClockPinComboBox, hw.DisplayClockPin);
+                SelectPin(DisplayMisoPinComboBox, hw.DisplayMisoPin);
+                SelectPin(DisplayCsPinComboBox, hw.DisplayCsPin);
+                SelectPin(DisplayDcPinComboBox, hw.DisplayDcPin);
+                SelectPin(DisplayResetPinComboBox, hw.DisplayResetPin);
+                SelectPin(DisplayBacklightPinComboBox, hw.DisplayBacklightPin);
+                SelectPin(I2cSdaPinComboBox, hw.I2cSdaPin);
+                SelectPin(I2cSclPinComboBox, hw.I2cSclPin);
+                SelectPin(TouchInterruptPinComboBox, hw.TouchInterruptPin);
+                SelectPin(TouchResetPinComboBox, hw.TouchResetPin);
+                TouchAddressTextBox.Text = hw.TouchAddress.ToString("X2");
+                InaAddressTextBox.Text = hw.Ina219Address.ToString("X2");
+                SelectPin(NavigationUpPinComboBox, hw.NavigationUpPin);
+                SelectPin(NavigationDownPinComboBox, hw.NavigationDownPin);
+                SelectPin(NavigationLeftPinComboBox, hw.NavigationLeftPin);
+                SelectPin(NavigationRightPinComboBox, hw.NavigationRightPin);
+                SelectPin(NavigationConfirmPinComboBox, hw.NavigationConfirmPin);
+                SelectPin(SteeringPinComboBox, hw.SteeringPin);
+                SelectPin(ThrottlePinComboBox, hw.ThrottlePin);
                 SelectPin(CrsfPinComboBox, hw.CrsfPin);
                 StatusModeComboBox.SelectedIndex = Math.Max(0, Math.Min(3, hw.StatusMode));
                 SelectPin(StatusMonoPinComboBox, hw.StatusMonoPin);
@@ -185,6 +251,7 @@ namespace SourceTXCompanion
                 StatusBrightnessSlider.Value = Math.Max(0, Math.Min(100, hw.StatusBrightness));
                 SoundModeComboBox.SelectedIndex = Math.Max(0, Math.Min(2, hw.SoundMode));
                 SelectPin(SoundPinComboBox, hw.SoundPin);
+                SelectPin(VoiceRxPinComboBox, hw.VoiceRxPin);
                 SelectPin(VibrationPinComboBox, hw.VibrationPin);
 
                 AppendConfigLog(string.Format("[SUCCESS] Loaded from NVS: CRSF=GPIO {0}, StatusMode={1}, SoundMode={2}, SoundPin={3}, VibPin={4}",
@@ -217,8 +284,42 @@ namespace SourceTXCompanion
                 return;
             }
 
+            int touchAddress;
+            int inaAddress;
+            if (!int.TryParse(TouchAddressTextBox.Text,
+                    System.Globalization.NumberStyles.HexNumber, null,
+                    out touchAddress) || touchAddress < 0x08 || touchAddress > 0x77 ||
+                !int.TryParse(InaAddressTextBox.Text,
+                    System.Globalization.NumberStyles.HexNumber, null,
+                    out inaAddress) || inaAddress < 0x40 || inaAddress > 0x4F)
+            {
+                MessageBox.Show("Enter the I²C addresses as hexadecimal values. Touch must be 08–77 and INA219 must be 40–4F.",
+                    "Invalid I²C Address", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             var hw = new HardwarePinSettings
             {
+                DisplayMosiPin = GetSelectedPin(DisplayMosiPinComboBox),
+                DisplayClockPin = GetSelectedPin(DisplayClockPinComboBox),
+                DisplayMisoPin = GetSelectedPin(DisplayMisoPinComboBox),
+                DisplayCsPin = GetSelectedPin(DisplayCsPinComboBox),
+                DisplayDcPin = GetSelectedPin(DisplayDcPinComboBox),
+                DisplayResetPin = GetSelectedPin(DisplayResetPinComboBox),
+                DisplayBacklightPin = GetSelectedPin(DisplayBacklightPinComboBox),
+                I2cSdaPin = GetSelectedPin(I2cSdaPinComboBox),
+                I2cSclPin = GetSelectedPin(I2cSclPinComboBox),
+                TouchInterruptPin = GetSelectedPin(TouchInterruptPinComboBox),
+                TouchResetPin = GetSelectedPin(TouchResetPinComboBox),
+                TouchAddress = touchAddress,
+                Ina219Address = inaAddress,
+                NavigationUpPin = GetSelectedPin(NavigationUpPinComboBox),
+                NavigationDownPin = GetSelectedPin(NavigationDownPinComboBox),
+                NavigationLeftPin = GetSelectedPin(NavigationLeftPinComboBox),
+                NavigationRightPin = GetSelectedPin(NavigationRightPinComboBox),
+                NavigationConfirmPin = GetSelectedPin(NavigationConfirmPinComboBox),
+                SteeringPin = GetSelectedPin(SteeringPinComboBox),
+                ThrottlePin = GetSelectedPin(ThrottlePinComboBox),
                 CrsfPin = GetSelectedPin(CrsfPinComboBox),
                 StatusMode = StatusModeComboBox.SelectedIndex,
                 StatusMonoPin = GetSelectedPin(StatusMonoPinComboBox),
@@ -228,6 +329,7 @@ namespace SourceTXCompanion
                 StatusBrightness = (int)StatusBrightnessSlider.Value,
                 SoundMode = SoundModeComboBox.SelectedIndex,
                 SoundPin = GetSelectedPin(SoundPinComboBox),
+                VoiceRxPin = GetSelectedPin(VoiceRxPinComboBox),
                 VibrationPin = GetSelectedPin(VibrationPinComboBox)
             };
 
@@ -249,6 +351,24 @@ namespace SourceTXCompanion
 
             try
             {
+                checkCollision(hw.DisplayMosiPin, "Display MOSI");
+                checkCollision(hw.DisplayClockPin, "Display clock");
+                checkCollision(hw.DisplayMisoPin, "Display MISO");
+                checkCollision(hw.DisplayCsPin, "Display CS");
+                checkCollision(hw.DisplayDcPin, "Display data/command");
+                checkCollision(hw.DisplayResetPin, "Display reset");
+                checkCollision(hw.DisplayBacklightPin, "Display backlight");
+                checkCollision(hw.I2cSdaPin, "I²C SDA");
+                checkCollision(hw.I2cSclPin, "I²C SCL");
+                checkCollision(hw.TouchInterruptPin, "Touch interrupt");
+                checkCollision(hw.TouchResetPin, "Touch reset");
+                checkCollision(hw.NavigationUpPin, "Navigation up");
+                checkCollision(hw.NavigationDownPin, "Navigation down");
+                checkCollision(hw.NavigationLeftPin, "Navigation left");
+                checkCollision(hw.NavigationRightPin, "Navigation right");
+                checkCollision(hw.NavigationConfirmPin, "Navigation confirm");
+                checkCollision(hw.SteeringPin, "Steering input");
+                checkCollision(hw.ThrottlePin, "Throttle input");
                 checkCollision(hw.CrsfPin, "CRSF UART");
                 if (hw.StatusMode == 1) checkCollision(hw.StatusMonoPin, "Status Mono LED");
                 if (hw.StatusMode == 3) checkCollision(hw.StatusMonoPin, "Status WS2812 NeoPixel LED");
@@ -259,6 +379,7 @@ namespace SourceTXCompanion
                     checkCollision(hw.StatusBluePin, "Status Blue LED");
                 }
                 if (hw.SoundMode != 0) checkCollision(hw.SoundPin, "Sound Output");
+                if (hw.SoundMode == 2) checkCollision(hw.VoiceRxPin, "DFPlayer RX");
                 checkCollision(hw.VibrationPin, "Vibration Motor");
             }
             catch (InvalidOperationException conflictEx)

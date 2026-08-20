@@ -1,0 +1,53 @@
+name: Publish Windows Companion Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: microsoft/setup-msbuild@v2
+
+      - name: Validate release version
+        shell: pwsh
+        run: |
+          $tagVersion = "${{ github.ref_name }}".TrimStart('v')
+          $source = Get-Content MainWindow.xaml.cs -Raw
+          $match = [regex]::Match($source, 'CURRENT_VERSION\s*=\s*"([^"]+)"')
+          if (-not $match.Success -or $match.Groups[1].Value -ne $tagVersion) {
+            throw "Tag version $tagVersion does not match Companion source version."
+          }
+
+      - name: Build release
+        run: msbuild SourceTXCompanion.csproj /p:Configuration=Release /p:Platform=AnyCPU /nologo
+
+      - name: Package and checksum
+        id: package
+        shell: pwsh
+        run: |
+          $version = "${{ github.ref_name }}".TrimStart('v')
+          $archive = "SourceTX-Companion-v$version-Windows-x64.zip"
+          Compress-Archive -Path bin/Release/* -DestinationPath $archive -CompressionLevel Optimal
+          $digest = (Get-FileHash $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$digest  $archive" | Set-Content "$archive.sha256" -Encoding ascii
+          "archive=$archive" >> $env:GITHUB_OUTPUT
+
+      - name: Publish immutable release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          if (gh release view $tag 2>$null) {
+            throw "Release $tag already exists; published Companion assets are immutable."
+          }
+          $archive = "${{ steps.package.outputs.archive }}"
+          gh release create $tag $archive "$archive.sha256" --title "SourceTX Companion $tag" --generate-notes --latest

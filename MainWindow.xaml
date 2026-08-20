@@ -53,7 +53,7 @@
                     <TextBlock Text="SourceTX" FontWeight="Bold" FontSize="13.5" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" />
                     <TextBlock Text=" Companion" FontWeight="Normal" FontSize="13.5" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" />
                     <Border Background="{DynamicResource CardInnerBgBrush}" CornerRadius="4" Padding="6,2" Margin="10,0,0,0" VerticalAlignment="Center">
-                        <TextBlock Text="v0.1.5" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" />
+                        <TextBlock Text="v0.2.0" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" />
                     </Border>
                 </StackPanel>
 
@@ -234,7 +234,7 @@
                                 </StackPanel>
 
                                 <TextBlock Grid.Row="2"
-                                           Text="Install the stable firmware included with this Companion. A regular update keeps your saved models and settings."
+                                           Text="Use SourceTX's signed inactive-slot OTA for normal updates. First installation and USB recovery remain in Install SourceTX."
                                            FontSize="11"
                                            Foreground="{DynamicResource TextSecondaryBrush}"
                                            TextWrapping="Wrap"
@@ -247,7 +247,7 @@
                                         Padding="10,6"
                                         HorizontalAlignment="Stretch">
                                     <Grid>
-                                        <TextBlock Text="Update SourceTX"
+                                        <TextBlock Text="View Update Options"
                                                    FontSize="11"
                                                    FontWeight="SemiBold"
                                                    Foreground="{DynamicResource CardUpdateAccentBrush}"
@@ -498,10 +498,10 @@
                     </StackPanel>
                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                         <TextBlock Text="Release channel" FontSize="9.5" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,7,0" />
-                        <Button Style="{StaticResource ModernAccentButton}" Padding="10,5" IsHitTestVisible="False" Focusable="False" ToolTip="Stable releases are tested and recommended for normal use">
+                        <Button x:Name="InstallStableChannelButton" Style="{StaticResource ModernAccentButton}" Padding="10,5" IsHitTestVisible="False" Focusable="False" ToolTip="Stable releases are tested and recommended for normal use">
                             <TextBlock Text="Stable" FontSize="10.5" FontWeight="Bold" />
                         </Button>
-                        <Button Style="{StaticResource ModernOutlineButton}" Padding="10,5" Margin="6,0,0,0" IsEnabled="False" ToolTipService.ShowOnDisabled="True" ToolTip="Coming later — no experimental releases are available yet">
+                        <Button x:Name="InstallExperimentalChannelButton" Style="{StaticResource ModernOutlineButton}" Padding="10,5" Margin="6,0,0,0" IsEnabled="False" IsHitTestVisible="False" Focusable="False" ToolTipService.ShowOnDisabled="True" ToolTip="Experimental hardware support requires extra care">
                             <TextBlock Text="Experimental" FontSize="10.5" />
                         </Button>
                     </StackPanel>
@@ -535,10 +535,8 @@
                             </Grid.ColumnDefinitions>
 
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="Supported hardware" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
-                                <Border Height="32" Background="{DynamicResource SurfaceElevatedBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="5" Padding="10,0">
-                                    <TextBlock Text="SourceTX reference transmitter — ESP32-S3, 4 MB, 3.5-inch touch display" FontSize="10.5" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-                                </Border>
+                                <TextBlock Text="Board hardware" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+                                <ComboBox x:Name="InstallBoardComboBox" Height="32" SelectionChanged="HardwareTarget_Changed" />
                             </StackPanel>
 
                             <StackPanel Grid.Column="2">
@@ -555,7 +553,6 @@
                                 <TextBlock Text="Find Transmitter" FontWeight="SemiBold" FontSize="11" />
                             </Button>
 
-                            <ComboBox x:Name="InstallBoardComboBox" Visibility="Collapsed" SelectionChanged="HardwareTarget_Changed" />
                             <ComboBox x:Name="InstallDisplayComboBox" Visibility="Collapsed" SelectionChanged="HardwareTarget_Changed" />
                         </Grid>
 
@@ -584,7 +581,7 @@
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0">
-                                    <TextBlock Text="Verified stable firmware" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" />
+                                    <TextBlock x:Name="InstallPackageChannelText" Text="Verified stable firmware" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" />
                                     <TextBlock Text="Companion downloads the signed release and checks it before installation. Keep the USB cable connected until completion." FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,14,0" TextWrapping="Wrap"/>
                                 </StackPanel>
                                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
@@ -653,7 +650,7 @@
                     </Button>
                     <StackPanel Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="12,0">
                         <TextBlock Text="Update or Repair SourceTX" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center" />
-                        <TextBlock Text="Regular Update is recommended and keeps your models and settings" FontSize="9.5" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center" />
+                        <TextBlock Text="Updates install safely from SourceTX's inactive OTA slot" FontSize="9.5" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center" />
                     </StackPanel>
                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                         <TextBlock Text="Release channel" FontSize="9.5" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,7,0" />
@@ -693,25 +690,24 @@
                             </Grid.ColumnDefinitions>
 
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="What do you want to do?" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
-                                <ComboBox x:Name="FlashModeComboBox" Height="32" SelectedIndex="0">
-                                    <ComboBoxItem Content="Regular update — keep models and settings" />
-                                    <ComboBoxItem Content="Recovery install — reinstall all firmware" />
+                                <TextBlock Text="Update method" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+                                <ComboBox x:Name="FlashModeComboBox" Height="32" SelectedIndex="0" IsEnabled="False">
+                                    <ComboBoxItem Content="On-device signed OTA — inactive slot" />
                                 </ComboBox>
                             </StackPanel>
 
                             <StackPanel Grid.Column="2">
-                                <TextBlock Text="Transmitter USB connection" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
-                                <ComboBox x:Name="PortComboBox" Height="32" />
+                                <TextBlock Text="Where to update" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+                                <TextBlock Text="Settings > System > Firmware Update" Height="32" VerticalAlignment="Center" Foreground="{DynamicResource TextPrimaryBrush}" />
                             </StackPanel>
 
                             <Button Grid.Column="4"
                                     Style="{StaticResource ModernOutlineButton}"
                                     Height="32"
                                     VerticalAlignment="Bottom"
-                                    Click="AutoDetectPorts_Click"
-                                    ToolTip="Find a connected SourceTX transmitter">
-                                <TextBlock Text="Find Transmitter" FontWeight="SemiBold" FontSize="11" />
+                                    Click="StartFlash_Click"
+                                    ToolTip="Show safe update and USB recovery guidance">
+                                <TextBlock Text="Why on-device?" FontWeight="SemiBold" FontSize="11" />
                             </Button>
 
                             <ComboBox x:Name="UpdateBoardComboBox" Visibility="Collapsed" SelectionChanged="HardwareTarget_Changed" />
@@ -721,15 +717,15 @@
                         <!-- Included stable firmware notice -->
                         <Border Grid.Row="1" Background="{DynamicResource NoticeBannerBgBrush}" BorderBrush="{DynamicResource NoticeBannerBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10,7" Margin="0,0,0,8">
                             <StackPanel>
-                                <TextBlock Text="Stable firmware included with Companion" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" />
-                                <TextBlock Text="Regular Update changes only the SourceTX application and keeps compatible models and settings. Recovery Install rewrites the complete boot and application firmware." FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0" TextWrapping="Wrap"/>
+                                <TextBlock Text="Signed OTA preserves models and update rollback" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" />
+                                <TextBlock Text="SourceTX selects the inactive application slot, verifies the signed image, and changes boot state transactionally. For first installation or USB recovery, use Install SourceTX from the main menu." FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0" TextWrapping="Wrap"/>
                             </StackPanel>
                         </Border>
 
                         <!-- Progress Bar & Status -->
                         <StackPanel Grid.Row="2" Margin="0,0,0,6">
                             <Grid Margin="0,0,0,2">
-                                <TextBlock x:Name="FlashStatusText" Text="Ready — connect the transmitter and choose Find Transmitter" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" />
+                                <TextBlock x:Name="FlashStatusText" Text="Ready — open Firmware Update on the transmitter" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" />
                                 <TextBlock x:Name="FlashPercentText" Text="0%" FontSize="10.5" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Right" />
                             </Grid>
                             <ProgressBar x:Name="FlashProgressBar" Value="0" Maximum="100" Height="5" />
@@ -744,7 +740,7 @@
                                                FontSize="10"
                                                Foreground="#85E89D"
                                                TextWrapping="Wrap"
-                                               Text="[READY] Connect the transmitter by USB, choose Find Transmitter, then Update SourceTX." />
+                                               Text="[READY] Normal updates use SourceTX's signed inactive-slot OTA. USB factory installation remains available from Install SourceTX." />
                                 </ScrollViewer>
                             </Border>
                         </Expander>
@@ -756,7 +752,7 @@
                                 Height="34"
                                 HorizontalAlignment="Right"
                                 Click="StartFlash_Click">
-                            <TextBlock Text="Update SourceTX" FontWeight="Bold" FontSize="11.5" />
+                            <TextBlock Text="Show Update Instructions" FontWeight="Bold" FontSize="11.5" />
                         </Button>
                     </Grid>
                 </Border>
@@ -1033,7 +1029,7 @@
                     </Button>
                     <StackPanel Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="12,0">
                         <TextBlock Text="Configure Transmitter Hardware Pins" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center" />
-                        <TextBlock Text="Save CRSF UART, Status LED, and Feedback pins directly in NVS memory" FontSize="9.5" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center" />
+                        <TextBlock Text="Read or save the complete validated ESP32-S3 wiring profile" FontSize="9.5" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center" />
                     </StackPanel>
                 </Grid>
 
@@ -1079,11 +1075,12 @@
 
                         <!-- Notice Banner -->
                         <Border Grid.Row="1" Background="{DynamicResource NoticeBannerBgBrush}" BorderBrush="{DynamicResource NoticeBannerBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10,5" Margin="0,0,0,8">
-                            <TextBlock Text="Tip: Open Settings → Transmitter → Model Transfer on the transmitter, then click Read from Transmitter or Save to Transmitter." FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" />
+                            <TextBlock Text="Connect the powered transmitter by USB. Hardware settings are always available; only model backup and restore require the Model Transfer screen." FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" />
                         </Border>
 
                         <!-- Pin Configuration Cards Deck (3 Subsystems) -->
-                        <Grid Grid.Row="2" Margin="0,0,0,8">
+                        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="0,0,0,8">
+                        <Grid Margin="0,0,8,0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="10" />
@@ -1108,7 +1105,22 @@
                                     <TextBlock Text="CRSF Half-Duplex Pin" FontSize="10.5" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,2"/>
                                     <ComboBox x:Name="CrsfPinComboBox" Height="30" Margin="0,0,0,6"/>
 
-                                    <TextBlock Text="Half-duplex serial pin for internal or external RF module (default: GPIO 43)." FontSize="9.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" LineHeight="13"/>
+                                    <TextBlock Text="Half-duplex serial pin for the RF module (default: GPIO 42)." FontSize="9.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" LineHeight="13"/>
+
+                                    <TextBlock Text="Steering ADC Pin" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,8,0,1"/>
+                                    <ComboBox x:Name="SteeringPinComboBox" Height="26" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Throttle ADC Pin" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,1"/>
+                                    <ComboBox x:Name="ThrottlePinComboBox" Height="26" Margin="0,0,0,4"/>
+
+                                    <TextBlock Text="Navigation Buttons" FontSize="10.5" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,8,0,3"/>
+                                    <UniformGrid Columns="2">
+                                        <StackPanel Margin="0,0,3,3"><TextBlock Text="Up" FontSize="9"/><ComboBox x:Name="NavigationUpPinComboBox" Height="25"/></StackPanel>
+                                        <StackPanel Margin="3,0,0,3"><TextBlock Text="Down" FontSize="9"/><ComboBox x:Name="NavigationDownPinComboBox" Height="25"/></StackPanel>
+                                        <StackPanel Margin="0,0,3,3"><TextBlock Text="Left" FontSize="9"/><ComboBox x:Name="NavigationLeftPinComboBox" Height="25"/></StackPanel>
+                                        <StackPanel Margin="3,0,0,3"><TextBlock Text="Right" FontSize="9"/><ComboBox x:Name="NavigationRightPinComboBox" Height="25"/></StackPanel>
+                                    </UniformGrid>
+                                    <TextBlock Text="Confirm / Middle" FontSize="9"/>
+                                    <ComboBox x:Name="NavigationConfirmPinComboBox" Height="25"/>
                                 </StackPanel>
                             </Border>
 
@@ -1167,6 +1179,16 @@
                                         <TextBlock x:Name="StatusBrightnessText" Text="60%" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource CardConfigAccentBrush}" HorizontalAlignment="Right"/>
                                     </Grid>
                                     <Slider x:Name="StatusBrightnessSlider" Minimum="0" Maximum="100" Value="60" ValueChanged="StatusBrightness_ValueChanged" Height="20" SmallChange="5" LargeChange="10"/>
+
+                                    <TextBlock Text="Shared I²C, Touch &amp; Battery" FontSize="10.5" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,8,0,3"/>
+                                    <UniformGrid Columns="2">
+                                        <StackPanel Margin="0,0,3,3"><TextBlock Text="I²C SDA" FontSize="9"/><ComboBox x:Name="I2cSdaPinComboBox" Height="25"/></StackPanel>
+                                        <StackPanel Margin="3,0,0,3"><TextBlock Text="I²C SCL" FontSize="9"/><ComboBox x:Name="I2cSclPinComboBox" Height="25"/></StackPanel>
+                                        <StackPanel Margin="0,0,3,3"><TextBlock Text="Touch interrupt" FontSize="9"/><ComboBox x:Name="TouchInterruptPinComboBox" Height="25"/></StackPanel>
+                                        <StackPanel Margin="3,0,0,3"><TextBlock Text="Touch reset" FontSize="9"/><ComboBox x:Name="TouchResetPinComboBox" Height="25"/></StackPanel>
+                                        <StackPanel Margin="0,0,3,3"><TextBlock Text="Touch addr (hex)" FontSize="9"/><TextBox x:Name="TouchAddressTextBox" Text="38" Height="25"/></StackPanel>
+                                        <StackPanel Margin="3,0,0,3"><TextBlock Text="INA219 addr (hex)" FontSize="9"/><TextBox x:Name="InaAddressTextBox" Text="40" Height="25"/></StackPanel>
+                                    </UniformGrid>
                                 </StackPanel>
                             </Border>
 
@@ -1193,11 +1215,28 @@
                                     <TextBlock Text="Sound / Buzzer Pin" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,1"/>
                                     <ComboBox x:Name="SoundPinComboBox" Height="26" Margin="0,0,0,4"/>
 
+                                    <TextBlock Text="DFPlayer RX Pin (optional)" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,1"/>
+                                    <ComboBox x:Name="VoiceRxPinComboBox" Height="26" Margin="0,0,0,4"/>
+
                                     <TextBlock Text="Vibration Motor Pin" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,1"/>
                                     <ComboBox x:Name="VibrationPinComboBox" Height="26" Margin="0,0,0,4"/>
+
+                                    <TextBlock Text="ST7796 Display Wiring" FontSize="10.5" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,8,0,3"/>
+                                    <TextBlock Text="Controller and 480×320 layout remain fixed." FontSize="9" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,3"/>
+                                    <UniformGrid Columns="2">
+                                        <StackPanel Margin="0,0,3,3"><TextBlock Text="MOSI" FontSize="9"/><ComboBox x:Name="DisplayMosiPinComboBox" Height="25"/></StackPanel>
+                                        <StackPanel Margin="3,0,0,3"><TextBlock Text="Clock" FontSize="9"/><ComboBox x:Name="DisplayClockPinComboBox" Height="25"/></StackPanel>
+                                        <StackPanel Margin="0,0,3,3"><TextBlock Text="MISO (optional)" FontSize="9"/><ComboBox x:Name="DisplayMisoPinComboBox" Height="25"/></StackPanel>
+                                        <StackPanel Margin="3,0,0,3"><TextBlock Text="Chip select" FontSize="9"/><ComboBox x:Name="DisplayCsPinComboBox" Height="25"/></StackPanel>
+                                        <StackPanel Margin="0,0,3,3"><TextBlock Text="Data / command" FontSize="9"/><ComboBox x:Name="DisplayDcPinComboBox" Height="25"/></StackPanel>
+                                        <StackPanel Margin="3,0,0,3"><TextBlock Text="Reset" FontSize="9"/><ComboBox x:Name="DisplayResetPinComboBox" Height="25"/></StackPanel>
+                                    </UniformGrid>
+                                    <TextBlock Text="Backlight" FontSize="9"/>
+                                    <ComboBox x:Name="DisplayBacklightPinComboBox" Height="25"/>
                                 </StackPanel>
                             </Border>
                         </Grid>
+                        </ScrollViewer>
 
                         <!-- Log Console Block -->
                         <Border Grid.Row="3"
@@ -1214,7 +1253,7 @@
                                            FontSize="10"
                                            Foreground="{DynamicResource CardConfigAccentBrush}"
                                            TextWrapping="Wrap"
-                                           Text="[READY] Connect transmitter via USB and open Settings → Transmitter → Model Transfer.&#x0a;Click 'Read from Transmitter' to inspect saved NVS pins, or adjust and click 'Save to Transmitter'." />
+                                           Text="[READY] Connect the powered transmitter via USB.&#x0a;Read the saved profile before changing pins; reboot after saving." />
                             </ScrollViewer>
                         </Border>
 
@@ -1254,7 +1293,7 @@
                 <!-- Status Pill Left -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                     <Ellipse x:Name="StatusIndicatorDot" Width="7.5" Height="7.5" Fill="{DynamicResource SuccessBrush}" Margin="0,0,8,0" />
-                    <TextBlock x:Name="StatusBarText" Text="Ready • SourceTX Companion v0.1.5" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" />
+                    <TextBlock x:Name="StatusBarText" Text="Ready • SourceTX Companion v0.2.0" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" />
                 </StackPanel>
 
                 <!-- Theme Toggle Switch Button -->

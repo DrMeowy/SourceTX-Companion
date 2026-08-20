@@ -1,6 +1,6 @@
 {
-  "version": "1.98",
-  "companion_version": "0.1.5",
+  "version": "1.0.0",
+  "companion_version": "0.2.0",
   "schema_version": 21,
   "boards": [
     {
@@ -13,9 +13,11 @@
       "psram": "2MB Quad-PSRAM",
       "partition_nvs": "0x3D0000",
       "hardware_id": "sourcetx-s3-st7796-ft6x36",
+      "channel": "stable",
+      "update_manifest_url": "https://github.com/DrMeowy/SourceTX-Updates/releases/latest/download/stable.json",
+      "update_manifest_signature_url": "https://github.com/DrMeowy/SourceTX-Updates/releases/latest/download/stable.json.sig",
       "factory_manifest_url": "https://github.com/DrMeowy/SourceTX-Updates/releases/latest/download/factory.json",
       "factory_manifest_signature_url": "https://github.com/DrMeowy/SourceTX-Updates/releases/latest/download/factory.json.sig",
-      "offline_factory_sha256": "379932294473c9b355845dda07efaf53ee4e8deec407dc29fcbb56ccaac9a521",
       "enabled": true
     },
     {
@@ -31,14 +33,20 @@
     },
     {
       "id": "esp32s3-16mb",
-      "name": "ESP32-S3 N16R8 (16MB Flash - In Development)",
+      "name": "ESP32-S3 N16R8 (16MB Flash, 8MB Octal PSRAM) [Experimental]",
       "chip": "esp32s3",
       "flash_size": "16MB",
-      "flash_mode": "qio",
+      "flash_mode": "dio",
       "flash_freq": "80m",
       "psram": "8MB Octal-PSRAM",
-      "partition_nvs": "0xFC0000",
-      "enabled": false
+      "partition_nvs": "0x810000",
+      "hardware_id": "sourcetx-s3-n16r8-st7796-ft6x36",
+      "channel": "experimental",
+      "update_manifest_url": "https://github.com/DrMeowy/SourceTX-Updates/releases/latest/download/experimental-n16r8.json",
+      "update_manifest_signature_url": "https://github.com/DrMeowy/SourceTX-Updates/releases/latest/download/experimental-n16r8.json.sig",
+      "factory_manifest_url": "https://github.com/DrMeowy/SourceTX-Updates/releases/latest/download/factory-n16r8.json",
+      "factory_manifest_signature_url": "https://github.com/DrMeowy/SourceTX-Updates/releases/latest/download/factory-n16r8.json.sig",
+      "enabled": true
     },
     {
       "id": "sourcetx-custom-pcb",
